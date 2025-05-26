@@ -3,6 +3,7 @@ import {Routes, Route} from 'react-router-dom'
 import Dashboard from './pages/Dashboard'
 import MainLayout from './components/MainLayouts'
 import CustomerManagement from './pages/CustomerManagement'
+import SalesManagement from './pages/SalesManagement'
 
 export default function App() {
   return (
@@ -10,6 +11,7 @@ export default function App() {
     <Route element={<MainLayout/>}>
     <Route path="/" element={<Dashboard/>}/>
     <Route path="/pelanggan" element={<CustomerManagement/>}/>
+    <Route path="/penjualan" element={<SalesManagement/>}/>
     </Route>
    </Routes>
   )
