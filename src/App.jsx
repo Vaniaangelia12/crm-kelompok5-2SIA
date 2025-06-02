@@ -18,18 +18,13 @@ export default function App() {
         <Route path="/" element={<Dashboard/>}/>
         <Route path="/pelanggan" element={<CustomerManagement/>}/>
         <Route path="/penjualan" element={<SalesManagement/>}/>
-        <Route path="/produk" element={<ProductManagement/>}/>        
+        <Route path="/produk" element={<ProductManagement/>}/>
+        <Route path="/umpanbalik" element={<UmpanBalik/>}/>
+        <Route path="/riwayat-pembelian" element={<RiwayatPembelian />} />        
       </Route>
       <Route path="/signup" element={<SignUp/>}/>
       <Route path="/signin" element={<SignIn/>}/>
       <Route path="/forgot-password" element={<ForgotPassword />} />
-    <Route element={<MainLayout/>}>
-    <Route path="/" element={<Dashboard/>}/>
-    <Route path="/produk" element={<ProductManagement/>}/>
-    <Route path="/umpanbalik" element={<UmpanBalik/>}/>
-    <Route path="/penjualan" element={<SalesManagement/>}/>
-    <Route path="/riwayat-pembelian" element={<RiwayatPembelian />} />
-    </Route>
    </Routes>
   )
 }
