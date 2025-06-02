@@ -8,6 +8,7 @@ import ProductManagement from './pages/Product'
 import SignUp from './pages/SignUp'
 import SignIn from './pages/SignIn'
 import ForgotPassword from './pages/ForgotPassword'
+import UmpanBalik from './pages/UmpanBalik'
 
 export default function App() {
   return (
@@ -21,6 +22,11 @@ export default function App() {
       <Route path="/signup" element={<SignUp/>}/>
       <Route path="/signin" element={<SignIn/>}/>
       <Route path="/forgot-password" element={<ForgotPassword />} />
+    <Route element={<MainLayout/>}>
+    <Route path="/" element={<Dashboard/>}/>
+    <Route path="/produk" element={<ProductManagement/>}/>
+    <Route path="/umpanbalik" element={<UmpanBalik/>}/>
+    </Route>
    </Routes>
   )
 }
