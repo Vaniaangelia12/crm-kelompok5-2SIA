@@ -19,13 +19,13 @@ const menuItems = [
   { name: 'Laporan', icon: <BarChart2 />, path: '/laporan' },
   { name: 'Penjualan', icon: <ShoppingCart />, path: '/penjualan' },
   { name: 'Umpan Balik', icon: <Users />, path: '/umpanbalik' },
-]
+  { name: "Riwayat Pembelian", icon: <PackageCheck />, path: "/riwayat-pembelian"},
+];
+[
   { name: "Dashboard", icon: <LayoutDashboard />, path: "/" },
   { name: "Produk", icon: <Box />, path: "/produk" },
   { name: "Laporan", icon: <BarChart2 />, path: "/laporan" },
   { name: "Penjualan", icon: <ShoppingCart />, path: "/penjualan" },
-  { name: "Riwayat Pembelian", icon: <PackageCheck />, path: "/riwayat-pembelian",
-  },
 ];
 
 const accountItems = [
