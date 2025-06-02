@@ -9,6 +9,7 @@ import SignUp from './pages/SignUp'
 import SignIn from './pages/SignIn'
 import ForgotPassword from './pages/ForgotPassword'
 import UmpanBalik from './pages/UmpanBalik'
+import RiwayatPembelian from './pages/RiwayatPembelian'
 
 export default function App() {
   return (
@@ -26,6 +27,8 @@ export default function App() {
     <Route path="/" element={<Dashboard/>}/>
     <Route path="/produk" element={<ProductManagement/>}/>
     <Route path="/umpanbalik" element={<UmpanBalik/>}/>
+    <Route path="/penjualan" element={<SalesManagement/>}/>
+    <Route path="/riwayat-pembelian" element={<RiwayatPembelian />} />
     </Route>
    </Routes>
   )
