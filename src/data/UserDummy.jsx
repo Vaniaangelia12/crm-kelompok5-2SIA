@@ -5,11 +5,11 @@ export const UserDummy = [
     nama_lengkap: "Budi Santoso",
     email: "budi.santoso@example.com",
     tempat_lahir: "Jakarta",
-    tanggal_lahir: "1990-03-12",
+    tanggal_lahir: "12-03-1990", // Diubah format
     jenis_kelamin: "Laki-laki",
     alamat: "Jl. Merdeka No. 10, Jakarta Pusat",
     nomor_hp: "081234567890",
-    status_membership: "Aktif", // Diperbarui
+    status_membership: "Aktif",
     role: "user",
   },
   {
@@ -18,11 +18,11 @@ export const UserDummy = [
     nama_lengkap: "Siti Aminah",
     email: "siti.aminah@example.com",
     tempat_lahir: "Bandung",
-    tanggal_lahir: "1992-07-23",
+    tanggal_lahir: "23-07-1992", // Diubah format
     jenis_kelamin: "Perempuan",
     alamat: "Jl. Asia Afrika No. 5, Bandung",
     nomor_hp: "081345678901",
-    status_membership: "Loyal", // Diperbarui
+    status_membership: "Loyal",
     role: "user",
   },
   {
@@ -31,11 +31,11 @@ export const UserDummy = [
     nama_lengkap: "Joko Susilo",
     email: "joko.susilo@example.com",
     tempat_lahir: "Surabaya",
-    tanggal_lahir: "1988-11-05",
+    tanggal_lahir: "05-11-1988", // Diubah format
     jenis_kelamin: "Laki-laki",
     alamat: "Jl. Pahlawan No. 20, Surabaya",
     nomor_hp: "081456789012",
-    status_membership: "Pasif", // Diperbarui
+    status_membership: "Pasif",
     role: "user",
   },
   {
@@ -44,11 +44,11 @@ export const UserDummy = [
     nama_lengkap: "Dewi Lestari",
     email: "dewi.lestari@example.com",
     tempat_lahir: "Yogyakarta",
-    tanggal_lahir: "1995-01-18",
+    tanggal_lahir: "18-01-1995", // Diubah format
     jenis_kelamin: "Perempuan",
     alamat: "Jl. Malioboro No. 30, Yogyakarta",
     nomor_hp: "081567890123",
-    status_membership: "Baru", // Diperbarui
+    status_membership: "Baru",
     role: "user",
   },
   {
@@ -57,11 +57,11 @@ export const UserDummy = [
     nama_lengkap: "Agus Salim",
     email: "agus.salim@example.com",
     tempat_lahir: "Semarang",
-    tanggal_lahir: "1991-09-29",
+    tanggal_lahir: "29-09-1991", // Diubah format
     jenis_kelamin: "Laki-laki",
     alamat: "Jl. Pemuda No. 8, Semarang",
     nomor_hp: "081678901234",
-    status_membership: "Aktif", // Diperbarui
+    status_membership: "Aktif",
     role: "user",
   },
   {
@@ -70,11 +70,11 @@ export const UserDummy = [
     nama_lengkap: "Rina Wijaya",
     email: "rina.wijaya@example.com",
     tempat_lahir: "Denpasar",
-    tanggal_lahir: "1993-04-10",
+    tanggal_lahir: "10-04-1993", // Diubah format
     jenis_kelamin: "Perempuan",
     alamat: "Jl. Teuku Umar No. 15, Denpasar",
     nomor_hp: "081789012345",
-    status_membership: "Loyal", // Diperbarui
+    status_membership: "Loyal",
     role: "user",
   },
   {
@@ -83,11 +83,11 @@ export const UserDummy = [
     nama_lengkap: "Heru Prasetyo",
     email: "heru.prasetyo@example.com",
     tempat_lahir: "Medan",
-    tanggal_lahir: "1987-02-21",
+    tanggal_lahir: "21-02-1987", // Diubah format
     jenis_kelamin: "Laki-laki",
     alamat: "Jl. Sudirman No. 25, Medan",
     nomor_hp: "081890123456",
-    status_membership: "Pasif", // Diperbarui
+    status_membership: "Pasif",
     role: "user",
   },
   {
@@ -96,11 +96,11 @@ export const UserDummy = [
     nama_lengkap: "Endah Puspita",
     email: "endah.puspita@example.com",
     tempat_lahir: "Makassar",
-    tanggal_lahir: "1994-06-01",
+    tanggal_lahir: "01-06-1994", // Diubah format
     jenis_kelamin: "Perempuan",
     alamat: "Jl. Pattimura No. 12, Makassar",
     nomor_hp: "081901234567",
-    status_membership: "Baru", // Diperbarui
+    status_membership: "Baru",
     role: "user",
   },
   {
@@ -109,11 +109,11 @@ export const UserDummy = [
     nama_lengkap: "Fajar Nugraha",
     email: "fajar.nugraha@example.com",
     tempat_lahir: "Palembang",
-    tanggal_lahir: "1989-08-14",
+    tanggal_lahir: "14-08-1989", // Diubah format
     jenis_kelamin: "Laki-laki",
     alamat: "Jl. Jenderal Sudirman No. 7, Palembang",
     nomor_hp: "081123456789",
-    status_membership: "Aktif", // Diperbarui
+    status_membership: "Aktif",
     role: "user",
   },
   {
@@ -122,11 +122,11 @@ export const UserDummy = [
     nama_lengkap: "Linda Sari",
     email: "linda.sari@example.com",
     tempat_lahir: "Pekanbaru",
-    tanggal_lahir: "1990-10-25",
+    tanggal_lahir: "25-10-1990", // Diubah format
     jenis_kelamin: "Perempuan",
     alamat: "Jl. Riau No. 45, Pekanbaru",
     nomor_hp: "081234567899",
-    status_membership: "Loyal", // Diperbarui
+    status_membership: "Loyal",
     role: "user",
   },
   {
@@ -135,11 +135,11 @@ export const UserDummy = [
     nama_lengkap: "Doni Pratama",
     email: "doni.pratama@example.com",
     tempat_lahir: "Padang",
-    tanggal_lahir: "1996-12-06",
+    tanggal_lahir: "06-12-1996", // Diubah format
     jenis_kelamin: "Laki-laki",
     alamat: "Jl. Khatib Sulaiman No. 100, Padang",
     nomor_hp: "081345678990",
-    status_membership: "Aktif", // Diperbarui
+    status_membership: "Aktif",
     role: "user",
   },
   {
@@ -148,11 +148,11 @@ export const UserDummy = [
     nama_lengkap: "Putri Anggraini",
     email: "putri.anggraini@example.com",
     tempat_lahir: "Balikpapan",
-    tanggal_lahir: "1997-03-17",
+    tanggal_lahir: "17-03-1997", // Diubah format
     jenis_kelamin: "Perempuan",
     alamat: "Jl. MT Haryono No. 50, Balikpapan",
     nomor_hp: "081456789901",
-    status_membership: "Pasif", // Diperbarui
+    status_membership: "Pasif",
     role: "user",
   },
   {
@@ -161,11 +161,11 @@ export const UserDummy = [
     nama_lengkap: "Arif Budiman",
     email: "arif.budiman@example.com",
     tempat_lahir: "Manado",
-    tanggal_lahir: "1985-05-28",
+    tanggal_lahir: "28-05-1985", // Diubah format
     jenis_kelamin: "Laki-laki",
     alamat: "Jl. Sam Ratulangi No. 70, Manado",
     nomor_hp: "081567899012",
-    status_membership: "Loyal", // Diperbarui
+    status_membership: "Loyal",
     role: "user",
   },
   {
@@ -174,11 +174,11 @@ export const UserDummy = [
     nama_lengkap: "Cintia Bella",
     email: "cintia.bella@example.com",
     tempat_lahir: "Pontianak",
-    tanggal_lahir: "1998-07-09",
+    tanggal_lahir: "09-07-1998", // Diubah format
     jenis_kelamin: "Perempuan",
     alamat: "Jl. Gajah Mada No. 22, Pontianak",
     nomor_hp: "081678990123",
-    status_membership: "Baru", // Diperbarui
+    status_membership: "Baru",
     role: "user",
   },
   {
@@ -187,11 +187,11 @@ export const UserDummy = [
     nama_lengkap: "Admin Utama Fresh Mart",
     email: "admin.freshmart@example.com",
     tempat_lahir: "Jakarta",
-    tanggal_lahir: "1980-01-01",
+    tanggal_lahir: "01-01-1980", // Diubah format
     jenis_kelamin: "Laki-laki",
     alamat: "Kantor Pusat Fresh Mart, Jakarta",
     nomor_hp: "081112233445",
-    status_membership: "N/A", // Admin tetap N/A
+    status_membership: "N/A",
     role: "admin",
   },
 ];
