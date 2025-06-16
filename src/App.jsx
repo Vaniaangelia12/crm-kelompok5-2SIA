@@ -5,6 +5,7 @@ import MainLayout from './components/MainLayouts'
 import ProductManagement from './pages/Product'
 import UmpanBalik from './pages/UmpanBalik'
 import FAQ from './pages/FAQ'
+import Profile from './pages/Profil'
 
 export default function App() {
   return (
@@ -14,6 +15,7 @@ export default function App() {
     <Route path="/produk" element={<ProductManagement/>}/>
     <Route path="/umpanbalik" element={<UmpanBalik/>}/>
     <Route path="/faq" element={<FAQ/>}/>
+    <Route path="/akun" element={<Profile/>}/>
     </Route>
    </Routes>
   )
