@@ -73,7 +73,7 @@ const RiwayatPembelianTabel = () => {
   const voucherList = getVoucherDetail(status);
 
   return (
-    <div className="min-h-screen bg-[#3F9540] p-8 flex justify-center items-start">
+    <div className="min-h-screen bg-white p-8 flex justify-center items-start">
       <div className="w-[90%] max-w-7xl bg-white shadow-lg rounded-xl p-8">
         {/* Header */}
         <div className="text-center mb-6">
