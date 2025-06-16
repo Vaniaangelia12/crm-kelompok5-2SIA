@@ -73,7 +73,9 @@ export default function ProductManagement() {
 
       <button
         onClick={() => setShowForm((prev) => !prev)}
-        className="mb-4 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition"
+        className={`mb-4 px-4 py-2 text-white rounded transition ${
+          showForm ? "bg-[#E81F25] hover:bg-[#c4181d]" : "bg-[#3F9540] hover:bg-[#368239]"
+        }`}
       >
         {showForm ? "Batal Tambah Produk" : "Tambah Produk"}
       </button>
@@ -87,7 +89,7 @@ export default function ProductManagement() {
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className="w-full px-3 py-2 border rounded focus:ring-indigo-400 focus:outline-none"
+              className="w-full px-3 py-2 border rounded focus:ring-[#3F9540] focus:outline-none"
               placeholder="Masukkan nama produk"
             />
           </div>
@@ -98,7 +100,7 @@ export default function ProductManagement() {
               name="category"
               value={formData.category}
               onChange={handleChange}
-              className="w-full px-3 py-2 border rounded focus:ring-indigo-400 focus:outline-none"
+              className="w-full px-3 py-2 border rounded focus:ring-[#3F9540] focus:outline-none"
               placeholder="Contoh: Elektronik"
             />
           </div>
@@ -109,7 +111,7 @@ export default function ProductManagement() {
               name="stock"
               value={formData.stock}
               onChange={handleChange}
-              className="w-full px-3 py-2 border rounded focus:ring-indigo-400 focus:outline-none"
+              className="w-full px-3 py-2 border rounded focus:ring-[#3F9540] focus:outline-none"
               min="0"
             />
           </div>
@@ -120,7 +122,7 @@ export default function ProductManagement() {
               name="price"
               value={formData.price}
               onChange={handleChange}
-              className="w-full px-3 py-2 border rounded focus:ring-indigo-400 focus:outline-none"
+              className="w-full px-3 py-2 border rounded focus:ring-[#3F9540] focus:outline-none"
               min="0"
             />
           </div>
@@ -139,7 +141,7 @@ export default function ProductManagement() {
 
           <button
             onClick={handleAddProduct}
-            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+            className="px-4 py-2 text-white bg-[#3F9540] rounded hover:bg-[#368239] transition"
           >
             Simpan Produk
           </button>
@@ -167,24 +169,24 @@ export default function ProductManagement() {
                 <td className="px-6 py-4 text-right">{formatCurrency(product.price)}</td>
                 <td className="px-6 py-4 text-center">
                   {product.active ? (
-                    <span className="inline-block px-2 py-1 text-xs text-green-800 bg-green-100 rounded">
+                    <span className="inline-block px-2 py-1 text-xs text-white bg-[#3F9540] rounded">
                       Aktif
                     </span>
                   ) : (
-                    <span className="inline-block px-2 py-1 text-xs text-gray-600 bg-gray-200 rounded">
+                    <span className="inline-block px-2 py-1 text-xs text-white bg-[#E81F25] rounded">
                       Nonaktif
                     </span>
                   )}
                 </td>
                 <td className="px-6 py-4 text-center space-x-2">
                   <button
-                    className="text-indigo-600 hover:text-indigo-900"
+                    className="text-[#F59E0B] hover:text-[#D97706] font-semibold"
                     onClick={() => alert("Fitur Edit belum tersedia")}
                   >
                     Edit
                   </button>
                   <button
-                    className="text-red-600 hover:text-red-900"
+                    className="text-[#E81F25] hover:text-[#c4181d] font-semibold"
                     onClick={() => handleDelete(product.id)}
                   >
                     Hapus

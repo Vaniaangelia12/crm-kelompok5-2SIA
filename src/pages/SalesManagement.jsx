@@ -97,7 +97,10 @@ export default function SalesManagement() {
 
       <button
         onClick={() => setShowForm((prev) => !prev)}
-        className="mb-4 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition"
+        className="mb-4 px-4 py-2 text-white rounded transition"
+        style={{
+          backgroundColor: showForm ? "#E81F25" : "#3F9540",
+        }}
       >
         {showForm ? "Batal Tambah Penjualan" : "Tambah Penjualan"}
       </button>
@@ -112,7 +115,7 @@ export default function SalesManagement() {
               value={formData.invoice}
               onChange={handleInputChange}
               placeholder="Misal: INV-003"
-              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#3F9540]"
             />
           </div>
 
@@ -122,7 +125,7 @@ export default function SalesManagement() {
               name="customerId"
               value={formData.customerId}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#3F9540]"
             >
               <option value="">-- Pilih Pelanggan --</option>
               {dummyCustomers.map((c) => (
@@ -140,7 +143,7 @@ export default function SalesManagement() {
               name="date"
               value={formData.date}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#3F9540]"
             />
           </div>
 
@@ -152,7 +155,7 @@ export default function SalesManagement() {
               value={formData.total}
               onChange={handleInputChange}
               placeholder="Jumlah total penjualan"
-              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#3F9540]"
               min="0"
             />
           </div>
@@ -163,7 +166,7 @@ export default function SalesManagement() {
               name="status"
               value={formData.status}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#3F9540]"
             >
               <option value="Belum Lunas">Belum Lunas</option>
               <option value="Lunas">Lunas</option>
@@ -173,7 +176,8 @@ export default function SalesManagement() {
 
           <button
             onClick={handleAddSale}
-            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
+            className="px-4 py-2 text-white rounded transition"
+            style={{ backgroundColor: "#3F9540" }}
           >
             Simpan
           </button>
@@ -217,7 +221,10 @@ export default function SalesManagement() {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-center">
                   {sale.status === "Lunas" ? (
-                    <span className="inline-flex px-2 text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                    <span
+                      className="inline-flex px-2 text-xs leading-5 font-semibold rounded-full text-white"
+                      style={{ backgroundColor: "#3F9540" }}
+                    >
                       Lunas
                     </span>
                   ) : sale.status === "Belum Lunas" ? (
@@ -225,20 +232,25 @@ export default function SalesManagement() {
                       Belum Lunas
                     </span>
                   ) : (
-                    <span className="inline-flex px-2 text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                    <span
+                      className="inline-flex px-2 text-xs leading-5 font-semibold rounded-full text-white"
+                      style={{ backgroundColor: "#E81F25" }}
+                    >
                       Batal
                     </span>
                   )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-center space-x-2">
                   <button
-                    className="text-indigo-600 hover:text-indigo-900 font-semibold"
+                    className="font-semibold"
+                    style={{ color: "#F59E0B" }}
                     onClick={() => alert("Fitur Edit belum tersedia")}
                   >
                     Edit
                   </button>
                   <button
-                    className="text-red-600 hover:text-red-900 font-semibold"
+                    className="font-semibold"
+                    style={{ color: "#E81F25" }}
                     onClick={() => handleDelete(sale.id)}
                   >
                     Hapus
@@ -259,3 +271,4 @@ export default function SalesManagement() {
     </div>
   );
 }
+
