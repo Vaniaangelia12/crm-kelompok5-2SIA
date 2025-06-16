@@ -20,6 +20,7 @@ const menuItems = [
   { name: "Penjualan", icon: <ShoppingCart />, path: "/penjualan" },
   { name: "Umpan Balik", icon: <Users />, path: "/umpanbalik" },
   { name: "Riwayat Pembelian", icon: <PackageCheck />, path: "/riwayat-pembelian" },
+  { name: 'FAQ', icon: <Info />, path: '/faq' },
 ];
 
 const accountItems = [

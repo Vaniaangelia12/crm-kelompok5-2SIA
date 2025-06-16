@@ -10,6 +10,7 @@ import SignIn from './pages/SignIn'
 import ForgotPassword from './pages/ForgotPassword'
 import UmpanBalik from './pages/UmpanBalik'
 import RiwayatPembelian from './pages/RiwayatPembelian'
+import FAQ from './pages/FAQ'
 
 export default function App() {
   return (
@@ -25,6 +26,12 @@ export default function App() {
       <Route path="/signup" element={<SignUp/>}/>
       <Route path="/signin" element={<SignIn/>}/>
       <Route path="/forgot-password" element={<ForgotPassword />} />
+    <Route element={<MainLayout/>}>
+    <Route path="/" element={<Dashboard/>}/>
+    <Route path="/produk" element={<ProductManagement/>}/>
+    <Route path="/umpanbalik" element={<UmpanBalik/>}/>
+    <Route path="/faq" element={<FAQ/>}/>
+    </Route>
    </Routes>
   )
 }
