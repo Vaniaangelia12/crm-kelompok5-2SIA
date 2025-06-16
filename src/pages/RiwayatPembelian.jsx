@@ -35,23 +35,50 @@ const RiwayatPembelianTabel = () => {
   );
 
   const [currentPage, setCurrentPage] = useState(1);
+  const [voucherClaimed, setVoucherClaimed] = useState(false);
   const totalPages = Math.ceil(transaksiUser.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentData = transaksiUser.slice(
-    startIndex,
-    startIndex + itemsPerPage
-  );
+  const currentData = transaksiUser.slice(startIndex, startIndex + itemsPerPage);
+
+  const status = getStatusUser(transaksiUser);
+
+  // Data voucher berdasarkan status
+  const getVoucherDetail = (status) => {
+    switch (status) {
+      case "Loyal":
+        return [
+          "Diskon 50% untuk pembelian sayur segar",
+          "Beli 1 gratis 1 untuk produk tisu",
+        ];
+      case "Aktif":
+        return [
+          "Diskon 30% untuk kopi pilihan",
+          "Beli 1 gratis 1 untuk *produk mandi",
+        ];
+      case "Pasif":
+        return [
+          "Diskon 20% untuk semua produk minuman",
+          "Gratis 1 produk random setiap transaksi",
+        ];
+      case "Baru":
+        return [
+          "Diskon 10% untuk pembelian pertama",
+          "Voucher cashback Rp5.000 untuk transaksi berikutnya",
+        ];
+      default:
+        return [];
+    }
+  };
+
+  const voucherList = getVoucherDetail(status);
 
   return (
-    <div className="min-h-screen  p-8 flex justify-center items-start">
+    <div className="min-h-screen bg-[#3F9540] p-8 flex justify-center items-start">
       <div className="w-[90%] max-w-7xl bg-white shadow-lg rounded-xl p-8">
-        {/* Judul & Ilustrasi & Status */}
+        {/* Header */}
         <div className="text-center mb-6">
           <h1 className="text-3xl font-bold text-[#3F9540]">Riwayat Pembelian</h1>
-          <p className="text-base text-gray-600 mt-1">
-            Lihat histori transaksi Anda sebelumnya
-          </p>
-
+          <p className="text-base text-gray-600 mt-1">Lihat histori transaksi Anda sebelumnya</p>
           <div className="flex justify-center my-4">
             <img
               src="https://cdn-icons-png.flaticon.com/512/3523/3523887.png"
@@ -59,20 +86,39 @@ const RiwayatPembelianTabel = () => {
               className="w-20 h-20"
             />
           </div>
-
           <p className="text-md text-gray-700">
             Status Pengguna:{" "}
-            <span className="font-semibold text-[#3F9540]">
-              {getStatusUser(transaksiUser)}
-            </span>
+            <span className="font-semibold text-[#3F9540]">{status}</span>
           </p>
-          <p className="text-md text-gray-700 mt-1 ">
-            Riwayat milik: <span className="font-semibold text-[#E81F25]">{userLogin.nama}</span>
+          <p className="text-md text-gray-700 mt-1">
+            Riwayat milik:{" "}
+            <span className="font-semibold text-[#E81F25]">{userLogin.nama}</span>
           </p>
         </div>
 
-        {/* Tabel */}
-        <div className="overflow-x-auto">
+        {/* Voucher Diskon */}
+        <div className="bg-[#f0fdf3] border border-[#3F9540] rounded-lg px-5 py-4 mt-4 max-w-2xl mx-auto shadow-sm">
+          <h3 className="text-lg font-bold text-[#3F9540] mb-2">🎁 Voucher Spesial untuk Kamu</h3>
+          <ul className="list-disc list-inside text-sm text-gray-700 mb-4">
+            {voucherList.map((voucher, i) => (
+              <li key={i}>{voucher}</li>
+            ))}
+          </ul>
+          <button
+            onClick={() => setVoucherClaimed(true)}
+            disabled={voucherClaimed}
+            className={`px-4 py-2 rounded-md font-semibold transition ${
+              voucherClaimed
+                ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+                : "bg-[#3F9540] text-white hover:bg-[#347b36]"
+            }`}
+          >
+            {voucherClaimed ? "Voucher Telah Diklaim" : "Klaim Voucher"}
+          </button>
+        </div>
+
+        {/* Tabel Riwayat */}
+        <div className="overflow-x-auto mt-8">
           <table className="w-full border text-sm text-left text-gray-700 bg-white rounded-md overflow-hidden">
             <thead className="bg-[#3F9540] text-white font-semibold">
               <tr>
@@ -85,17 +131,25 @@ const RiwayatPembelianTabel = () => {
             <tbody>
               {currentData.map((item, index) => (
                 <tr key={item.id} className="hover:bg-[#eef7ef] transition">
-                  <td className="py-2 px-4 border-2 border-[#3F9540]">{startIndex + index + 1}</td>
-                  <td className="py-2 px-4 border-2 border-[#3F9540]">{item.tanggal}</td>
-                  <td className="py-2 px-4 border-2 border-[#3F9540]">{item.deskripsi}</td>
-                  <td className="py-2 px-4 border-2 border-[#3F9540]">{item.total}</td>
+                  <td className="py-2 px-4 border-2 border-[#3F9540]">
+                    {startIndex + index + 1}
+                  </td>
+                  <td className="py-2 px-4 border-2 border-[#3F9540]">
+                    {item.tanggal}
+                  </td>
+                  <td className="py-2 px-4 border-2 border-[#3F9540]">
+                    {item.deskripsi}
+                  </td>
+                  <td className="py-2 px-4 border-2 border-[#3F9540]">
+                    {item.total}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
 
-        {/* Navigasi Tombol */}
+        {/* Pagination */}
         <div className="flex justify-end mt-6 gap-3">
           <button
             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
