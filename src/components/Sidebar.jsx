@@ -8,6 +8,7 @@ import {
   User,
   LogIn,
   UserPlus,
+  Info,
 } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 
@@ -16,6 +17,7 @@ const menuItems = [
   { name: 'Produk', icon: <Box />, path: '/produk' },
   { name: 'Laporan', icon: <BarChart2 />, path: '/laporan' },
   { name: 'Umpan Balik', icon: <Users />, path: '/umpanbalik' },
+  { name: 'FAQ', icon: <Info />, path: '/faq' },
 ]
 
 const accountItems = [
