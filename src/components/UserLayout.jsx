@@ -1,10 +1,10 @@
 import { Outlet } from "react-router-dom";
-import Sidebar from "./Sidebar";
+import Sidebar from "./UserSidebar";
 import Header from "./Header";
 
-export default function MainLayout() {
-  return (
-    <div id="app-container" className="bg-gray-100 min-h-screen flex w-full">
+export default function UserLayout() {
+    return (
+       <div id="app-container" className="bg-gray-100 min-h-screen flex w-full">
       {/* Sidebar dengan posisi fixed */}
       <div className="fixed left-0 top-0 h-screen w-64 bg-white shadow z-30">
         <Sidebar />
@@ -19,5 +19,5 @@ export default function MainLayout() {
         </main>
       </div>
     </div>
-  );
-}
+    );
+};

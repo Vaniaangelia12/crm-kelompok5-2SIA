@@ -13,10 +13,6 @@ const Header = () => {
           />
           <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
         </div>
-        <div className="flex items-center gap-2 text-sm cursor-pointer text-gray-700 hover:text-purple-700">
-          <User className="w-4 h-4" />
-          Sign In
-        </div>
       </div>
     </header>
   )

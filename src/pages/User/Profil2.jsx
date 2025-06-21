@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { UserDummy } from '../data/UserDummy';
-import { TransaksiDummy } from '../data/TransaksiDummy';
+import { UserDummy } from '../../data/UserDummy';
+import { TransaksiDummy } from '../../data/TransaksiDummy';
 import {
   User, Mail, Calendar, MapPin, Phone, Award, ClipboardList, PenTool, Save, X, Hash,
   Gift,

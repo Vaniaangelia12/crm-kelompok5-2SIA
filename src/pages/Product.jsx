@@ -101,7 +101,7 @@ export default function ProductManagement() {
   };
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
+    <div className="max-w-10xl mx-auto">
       <h1 className="text-2xl font-semibold mb-4 text-green-700">Manajemen Produk</h1> {/* Judul */}
 
       <button

@@ -1,60 +1,37 @@
 import React, { useState } from "react";
-
-const initialFeedbacks = [
-  {
-    id: 1,
-    nama: "Budi",
-    email: "budi@example.com",
-    kategori: "Saran",
-    pesan: "Tolong tambah fitur dark mode.",
-  },
-  {
-    id: 2,
-    nama: "Sari",
-    email: "sari@example.com",
-    kategori: "Keluhan",
-    pesan: "Website lambat saat diakses.",
-  },
-];
+import { UmpanBalikDummy } from "../data/UmpanBalikDummy"; // Sesuaikan path jika berbeda
 
 const kategoriColors = {
-  Saran: "bg-green-100 text-green-800",
-  Keluhan: "bg-red-100 text-red-800",
-  Pertanyaan: "bg-yellow-100 text-yellow-800",
+  saran: "bg-green-100 text-green-800",
+  keluhan: "bg-red-100 text-red-800",
+  pertanyaan: "bg-yellow-100 text-yellow-800",
 };
 
-export default function UmpanBalik() {
-  const [feedbackList, setFeedbackList] = useState(initialFeedbacks);
-  const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({
-    nama: "",
-    email: "",
-    kategori: "Saran",
-    pesan: "",
-  });
+export default function UmpanBalikAdmin() {
+  const initialFeedbackList = UmpanBalikDummy.map(fb => ({
+    ...fb,
+    tanggal: fb.tanggal || new Date().toISOString(), // Pastikan ada tanggal
+    adminNote: fb.adminNote || "", // Pastikan ada adminNote
+  }));
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  const [feedbackList, setFeedbackList] = useState(initialFeedbackList);
+  const [editingNote, setEditingNote] = useState(null);
+  const [noteValue, setNoteValue] = useState("");
+
+  const handleEditNote = (id, currentNote) => {
+    setEditingNote(id);
+    setNoteValue(currentNote);
   };
 
-  const handleAddFeedback = () => {
-    if (!formData.nama.trim() || !formData.email.trim() || !formData.pesan.trim()) {
-      alert("Mohon isi semua kolom yang diperlukan!");
-      return;
-    }
+  const handleSaveNote = (id) => {
+    setFeedbackList(feedbackList.map(fb =>
+      fb.id === id ? { ...fb, adminNote: noteValue } : fb
+    ));
+    setEditingNote(null);
+  };
 
-    const newFeedback = {
-      id: feedbackList.length > 0 ? feedbackList[feedbackList.length - 1].id + 1 : 1,
-      ...formData,
-    };
-
-    setFeedbackList([...feedbackList, newFeedback]);
-    setFormData({ nama: "", email: "", kategori: "Saran", pesan: "" });
-    setShowForm(false);
+  const handleCancelEdit = () => {
+    setEditingNote(null);
   };
 
   const handleDelete = (id) => {
@@ -63,199 +40,139 @@ export default function UmpanBalik() {
     }
   };
 
+  const formatDate = (dateString) => {
+    const options = {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    };
+    try {
+      return new Date(dateString).toLocaleDateString('id-ID', options);
+    } catch (e) {
+      console.error("Invalid date string:", dateString, e);
+      return "Tanggal tidak valid";
+    }
+  };
+
   return (
-    <div className="p-6 max-w-6xl mx-auto font-sans">
-      <h1 className="text-3xl font-extrabold mb-6 text-gray-900 tracking-wide">
+    <div className="max-w-10xl mx-auto font-sans">
+      <h1 className="text-3xl font-extrabold mb-6 text-[#E81F25] tracking-wide">
         Manajemen Umpan Balik Pelanggan
       </h1>
 
-      <button
-        onClick={() => setShowForm((prev) => !prev)}
-        className="mb-6 inline-flex items-center gap-2 px-5 py-2 bg-indigo-600 text-white rounded-lg shadow-md hover:bg-indigo-700 transition focus:outline-none focus:ring-4 focus:ring-indigo-300"
-        aria-expanded={showForm}
-        aria-controls="form-umpanbalik"
-      >
-        {showForm ? (
-          <>
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-              aria-hidden="true"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"></path>
-            </svg>
-            Batal Tambah Umpan Balik
-          </>
-        ) : (
-          <>
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-              aria-hidden="true"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"></path>
-            </svg>
-            Tambah Umpan Balik
-          </>
-        )}
-      </button>
-
-      {showForm && (
-        <section
-          id="form-umpanbalik"
-          className="bg-white rounded-xl shadow-lg p-8 mb-4 max-w-6xl mx-auto"
-          aria-label="Formulir tambah umpan balik"
-        >
-          <div className="space-y-5">
-            <div>
-              <label htmlFor="nama" className="block mb-2 font-semibold text-gray-700">
+      <section aria-label="Daftar umpan balik pelanggan" className="overflow-x-auto bg-white rounded-xl shadow-lg">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-[#E81F25]">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">
                 Nama
-              </label>
-              <input
-                type="text"
-                id="nama"
-                name="nama"
-                value={formData.nama}
-                onChange={handleChange}
-                placeholder="Masukkan nama Anda"
-                className="w-full rounded-md border border-gray-300 px-4 py-2 text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-300 transition"
-                required
-                autoComplete="name"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="email" className="block mb-2 font-semibold text-gray-700">
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">
                 Email
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="Masukkan email Anda"
-                className="w-full rounded-md border border-gray-300 px-4 py-2 text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-300 transition"
-                required
-                autoComplete="email"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="kategori" className="block mb-2 font-semibold text-gray-700">
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">
                 Kategori
-              </label>
-              <select
-                id="kategori"
-                name="kategori"
-                value={formData.kategori}
-                onChange={handleChange}
-                className="w-full rounded-md border border-gray-300 px-4 py-2 text-gray-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-300 transition"
-              >
-                <option value="Saran">Saran</option>
-                <option value="Keluhan">Keluhan</option>
-                <option value="Pertanyaan">Pertanyaan</option>
-              </select>
-            </div>
-
-            <div>
-              <label htmlFor="pesan" className="block mb-2 font-semibold text-gray-700">
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">
+                Tanggal
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">
                 Pesan
-              </label>
-              <textarea
-                id="pesan"
-                name="pesan"
-                value={formData.pesan}
-                onChange={handleChange}
-                rows="5"
-                placeholder="Tulis pesan Anda di sini..."
-                className="w-full rounded-md border border-gray-300 px-4 py-2 text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-300 transition resize-none"
-                required
-              ></textarea>
-            </div>
-
-            <button
-              onClick={handleAddFeedback}
-              className="w-full py-3 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition focus:outline-none focus:ring-4 focus:ring-indigo-300"
-              type="button"
-            >
-              Kirim Umpan Balik
-            </button>
-          </div>
-        </section>
-      )}
-
-      {!showForm && (
-        <section aria-label="Daftar umpan balik pelanggan" className="overflow-x-auto bg-white rounded-xl shadow-lg">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-indigo-50">
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider">
+                Catatan Admin
+              </th>
+              <th className="px-6 py-3 text-center text-xs font-semibold text-white uppercase tracking-wider">
+                Aksi
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {feedbackList.length === 0 ? (
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wider">
-                  Nama
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wider">
-                  Email
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wider">
-                  Kategori
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wider">
-                  Pesan
-                </th>
-                <th className="px-6 py-3 text-center text-xs font-semibold text-indigo-700 uppercase tracking-wider">
-                  Aksi
-                </th>
+                <td colSpan="7" className="py-10 text-center text-gray-400 italic">
+                  Belum ada umpan balik yang diberikan.
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {feedbackList.length === 0 ? (
-                <tr>
-                  <td colSpan="5" className="py-10 text-center text-gray-400 italic">
-                    Belum ada umpan balik yang diberikan.
+            ) : (
+              feedbackList.map(({ id, nama, email, kategori, isi, tanggal, adminNote }) => (
+                <tr
+                  key={id}
+                  className="hover:bg-gray-50 transition-colors duration-200"
+                >
+                  <td className="px-6 py-4 whitespace-nowrap text-gray-900 font-medium">{nama}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-gray-700">{email}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span
+                      className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${kategoriColors[kategori.toLowerCase()]}`}
+                    >
+                      {kategori}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-gray-700">
+                    {formatDate(tanggal)}
+                  </td>
+                  {/* Perubahan utama di sini: menambahkan title={isi} */}
+                  <td className="px-6 py-4 text-gray-800 max-w-xs whitespace-pre-wrap break-words">
+                    {isi}
+                  </td>
+                  <td className="px-6 py-4 text-gray-800 max-w-xs">
+                    {editingNote === id ? (
+                      <div className="space-y-2">
+                        <textarea
+                          value={noteValue}
+                          onChange={(e) => setNoteValue(e.target.value)}
+                          rows="3"
+                          className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#E81F25] focus:border-[#E81F25]"
+                        />
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleSaveNote(id)}
+                            className="px-3 py-1 bg-[#3F9540] text-white text-sm rounded hover:bg-[#2e7a2f]"
+                          >
+                            Simpan
+                          </button>
+                          <button
+                            onClick={handleCancelEdit}
+                            className="px-3 py-1 bg-gray-300 text-gray-700 text-sm rounded hover:bg-gray-400"
+                          >
+                            Batal
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        {adminNote ? (
+                          <div className="line-clamp-3">{adminNote}</div>
+                        ) : (
+                          <span className="text-gray-400 italic">Belum ada catatan</span>
+                        )}
+                        <button
+                          onClick={() => handleEditNote(id, adminNote)}
+                          className="mt-1 text-xs text-[#E81F25] hover:underline"
+                        >
+                          {adminNote ? "Edit Catatan" : "Tambah Catatan"}
+                        </button>
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 text-center whitespace-nowrap space-x-2">
+                    <button
+                      onClick={() => handleDelete(id)}
+                      className="text-[#E81F25] hover:text-[#c61a1f] font-semibold transition"
+                      aria-label={`Hapus umpan balik dari ${nama}`}
+                    >
+                      Hapus
+                    </button>
                   </td>
                 </tr>
-              ) : (
-                feedbackList.map(({ id, nama, email, kategori, pesan }) => (
-                  <tr
-                    key={id}
-                    className="hover:bg-indigo-50 transition-colors duration-200"
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap text-gray-900 font-medium">{nama}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-gray-700">{email}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${kategoriColors[kategori]}`}
-                      >
-                        {kategori}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-gray-800 max-w-xl truncate" title={pesan}>
-                      {pesan}
-                    </td>
-                    <td className="px-6 py-4 text-center whitespace-nowrap">
-                      <button
-                        onClick={() => handleDelete(id)}
-                        className="text-red-600 hover:text-red-900 font-semibold transition"
-                        aria-label={`Hapus umpan balik dari ${nama}`}
-                      >
-                        Hapus
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </section>
-      )}
+              ))
+            )}
+          </tbody>
+        </table>
+      </section>
     </div>
   );
 }

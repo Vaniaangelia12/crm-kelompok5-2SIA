@@ -1,32 +1,30 @@
 import {
   LayoutDashboard,
-  Users,         // untuk pelanggan
-  ShoppingCart,  // untuk penjualan
-  Box,           // untuk produk
-  BarChart2,     // untuk laporan
-  Settings,      // untuk pengaturan akun
+  Box,
+  MessageCircle,
+  Info,
   User,
+  ClipboardList,
   LogIn,
   UserPlus,
-  Info,
-  LogOutIcon,
+  LogOut,
 } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 
 const menuItems = [
-  { name: 'Dashboard', icon: <LayoutDashboard />, path: '/' },
-  { name: 'Produk', icon: <Box />, path: '/produk' },
-  { name: 'Umpan Balik', icon: <Users />, path: '/umpanbalik' },
-  { name: 'FAQ', icon: <Info />, path: '/faq' },
-  { name: 'Riwayat Pembelian', icon: <BarChart2 />, path: '/riwayatpembelian' },
-]
+  { name: 'Dashboard', icon: <LayoutDashboard />, path: '/user' },
+  { name: 'Katalog Produk', icon: <Box />, path: '/user/produk' },
+  { name: 'Umpan Balik', icon: <MessageCircle />, path: '/user/umpanbalik' },
+  { name: 'FAQ', icon: <Info />, path: '/user/faq' },
+  { name: 'Riwayat Pembelian', icon: <ClipboardList />, path: '/user/riwayat' },
+];
 
 const accountItems = [
-  { name: 'Profil', icon: <Settings />, path: '/akun' },
-  { name: 'Logout', icon: <LogOutIcon />, path: '/logout' },
-]
+  { name: 'Profil', icon: <User />, path: '/user/akun' },
+  { name: 'Logout', icon: <LogOut />, path: '/logout' },
+];
 
-const Sidebar = () => {
+const UserSidebar = () => {
   const location = useLocation()
 
   const isActive = (path) => location.pathname === path
@@ -99,4 +97,4 @@ const Sidebar = () => {
   )
 }
 
-export default Sidebar
+export default UserSidebar

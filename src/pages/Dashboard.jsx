@@ -1,4 +1,4 @@
-import React from 'react'
+import React from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -9,8 +9,12 @@ import {
   Title,
   Tooltip,
   Legend,
-} from 'chart.js'
-import { Bar, Line } from 'react-chartjs-2'
+} from 'chart.js';
+import { Bar, Line } from 'react-chartjs-2';
+import { TransaksiDummy } from '../data/TransaksiDummy';
+import { UserDummy } from '../data/UserDummy';
+import { UmpanBalikDummy } from '../data/UmpanBalikDummy';
+import { ProductDummy } from '../data/ProductDummy';
 
 ChartJS.register(
   CategoryScale,
@@ -21,77 +25,100 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend
-)
+);
 
 const Dashboard = () => {
-  // Data summary cards
-  const stats = [
-    { label: "Pendapatan Hari Ini", value: "$53,000", percent: "+55%", color: "green" },
-    { label: "Pengguna Hari Ini", value: "2,300", percent: "+3%", color: "blue" },
-    { label: "Klien Baru", value: "+3,462", percent: "-2%", color: "red" },
-    { label: "Penjualan", value: "$103,430", percent: "+5%", color: "purple" },
-  ]
+  const monthLabels = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
 
-  // Data untuk grafik Penjualan Bulanan (Bar Chart)
+  const monthlyIncome = Array(12).fill(0);
+  const monthlyUserSet = Array(12).fill(null).map(() => new Set());
+  let totalOverallIncome = 0;
+
+  TransaksiDummy.forEach((trx) => {
+    const date = new Date(trx.tanggalPembelian);
+    const month = date.getMonth();
+
+    const totalHarga = trx.items.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
+
+    monthlyIncome[month] += totalHarga;
+    monthlyUserSet[month].add(trx.userId);
+    totalOverallIncome += totalHarga;
+  });
+
+  const monthlyIncomeInThousands = monthlyIncome.map(income => income / 1000);
+  const monthlyCustomerCounts = monthlyUserSet.map((userSet) => userSet.size);
+
+  const totalCustomers = UserDummy.filter(user => user.role === "user").length;
+  const totalActiveProducts = ProductDummy.filter(product => product.active).length;
+  const totalFeedback = UmpanBalikDummy.length;
+
+  const stats = [
+    { label: "Total Pelanggan", value: totalCustomers.toLocaleString('id-ID'), color: "#3F9540" },
+    { label: "Total Pendapatan", value: `Rp${(totalOverallIncome).toLocaleString('id-ID')}`, color: "#E81F25" },
+    { label: "Total Produk Aktif", value: totalActiveProducts.toLocaleString('id-ID'), color: "#3F9540" },
+    { label: "Total Umpan Balik", value: totalFeedback.toLocaleString('id-ID'), color: "#E81F25" },
+  ];
+
   const barData = {
-    labels: ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"],
+    labels: monthLabels,
     datasets: [
       {
-        label: "Penjualan (dalam ribuan $)",
-        data: [12, 19, 14, 17, 22, 30, 28, 26, 32, 35, 40, 45],
-        backgroundColor: "rgba(99, 102, 241, 0.7)", // purple-600
+        label: "Pendapatan (ribu Rp)",
+        data: monthlyIncomeInThousands,
+        backgroundColor: "#E81F25", // Warna utama Fresh Mart
       },
     ],
-  }
+  };
 
   const barOptions = {
     responsive: true,
     plugins: {
       legend: { position: 'top' },
-      title: { display: true, text: 'Penjualan Bulanan Tahun Ini' },
+      title: { display: true, text: 'Pendapatan Bulanan dari Transaksi' },
     },
-  }
+  };
 
-  // Data untuk grafik Pertumbuhan Pelanggan (Line Chart)
   const lineData = {
-    labels: ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"],
+    labels: monthLabels,
     datasets: [
       {
-        label: "Jumlah Pelanggan",
-        data: [50, 75, 120, 180, 220, 260, 300, 350, 400, 430, 460, 500],
-        borderColor: "rgba(59, 130, 246, 1)", // blue-500
-        backgroundColor: "rgba(59, 130, 246, 0.3)",
+        label: "Jumlah Pelanggan Unik",
+        data: monthlyCustomerCounts,
+        borderColor: "#3F9540", // Warna hijau Fresh Mart
+        backgroundColor: "rgba(63, 149, 64, 0.3)",
         fill: true,
         tension: 0.3,
         pointRadius: 4,
       },
     ],
-  }
+  };
 
   const lineOptions = {
     responsive: true,
     plugins: {
       legend: { position: 'top' },
-      title: { display: true, text: 'Pertumbuhan Pelanggan Tahun Ini' },
+      title: { display: true, text: 'Pertumbuhan Pelanggan Unik per Bulan' },
     },
-  }
+  };
 
   return (
-    <div className="p-6 space-y-8">
+    <div className="space-y-8">
       {/* Statistik utama */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map(({ label, value, percent, color }) => (
+        {stats.map(({ label, value, color }) => (
           <div key={label} className="bg-white rounded-xl shadow p-5">
             <p className="text-sm text-gray-500">{label}</p>
-            <h2 className={`text-2xl font-bold text-${color}-600 flex items-center gap-2`}>
+            <h2 className="text-2xl font-bold" style={{ color }}>
               {value}
-              <span className={`text-xs font-semibold text-${color}-500`}>{percent}</span>
             </h2>
           </div>
         ))}
       </div>
 
-      {/* Grafik Penjualan Bulanan */}
+      {/* Grafik Pendapatan Bulanan */}
       <div className="bg-white rounded-xl shadow p-6">
         <Bar options={barOptions} data={barData} />
       </div>
@@ -101,7 +128,7 @@ const Dashboard = () => {
         <Line options={lineOptions} data={lineData} />
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Dashboard
+export default Dashboard;
