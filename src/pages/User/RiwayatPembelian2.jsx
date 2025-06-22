@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { TransaksiDummy } from "../../data/TransaksiDummy";
 import { ProductDummy } from "../../data/ProductDummy";
 import { History, ChevronLeft, ChevronRight } from 'lucide-react';
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 export default function RiwayatPembelianUserPribadi() {
   const [userTransaksi, setUserTransaksi] = useState([]);
@@ -35,6 +37,56 @@ export default function RiwayatPembelianUserPribadi() {
       currency: 'IDR',
       minimumFractionDigits: 0
     }).format(amount);
+  };
+
+  const handleGenerateInvoice = async (trx) => {
+    const elementId = `invoice-${trx.id}`;
+    const invoiceElement = document.getElementById(elementId);
+
+    if (!invoiceElement) {
+      console.error(`Elemen invoice dengan ID ${elementId} tidak ditemukan.`);
+      return;
+    }
+
+    // Buat elemen invoice terlihat (tetapi di luar layar) sebelum mengonversinya
+    invoiceElement.style.position = 'absolute';
+    invoiceElement.style.left = '-9999px'; // Pindahkan ke luar layar
+    invoiceElement.style.display = 'block'; // Pastikan terlihat
+
+    try {
+      const canvas = await html2canvas(invoiceElement, {
+        scale: 2, // Meningkatkan resolusi untuk kualitas PDF yang lebih baik
+        useCORS: true // Penting jika ada gambar dari URL eksternal
+      });
+      const pdf = new jsPDF('p', 'mm', 'a4'); // Gunakan 'mm' untuk satuan
+      const imgData = canvas.toDataURL("image/png");
+      
+      const imgWidth = 210; // Lebar A4 dalam mm
+      const pageHeight = 297; // Tinggi A4 dalam mm
+      const imgHeight = canvas.height * imgWidth / canvas.width;
+      let heightLeft = imgHeight;
+
+      let position = 0;
+
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+      
+      pdf.save(`Invoice-${trx.id}.pdf`);
+    } catch (error) {
+      console.error("Gagal membuat PDF:", error);
+    } finally {
+      // Sembunyikan kembali elemen invoice setelah selesai
+      invoiceElement.style.position = '';
+      invoiceElement.style.left = '';
+      invoiceElement.style.display = 'none';
+    }
   };
 
   const formatDate = (dateString) => {
@@ -136,10 +188,99 @@ export default function RiwayatPembelianUserPribadi() {
                   <p className="text-sm font-semibold text-gray-700">
                     Total Transaksi: <span className="text-lg text-[#3F9540] ml-2">{formatRupiah(trx.items.reduce((total, item) => total + item.price * item.quantity, 0))}</span>
                   </p>
+                  <button 
+                    onClick={() => handleGenerateInvoice(trx)} 
+                    className="ml-4 px-3 py-1 text-sm bg-[#3F9540] text-white rounded hover:bg-[#2E7C30]"
+                  >
+                    Unduh Struk PDF
+                  </button>
                 </div>
               </div>
             ))}
           </div>
+
+          {/* Ini adalah elemen invoice yang disembunyikan untuk keperluan PDF generation */}
+          {/* Ubah 'hidden-print' agar tidak menggunakan display: none secara langsung */}
+          {currentTransactions.map((trx) => (
+            <div 
+              id={`invoice-${trx.id}`} 
+              key={`invoice-hidden-${trx.id}`}
+              // Pertahankan gaya ini untuk kebutuhan html2canvas
+              style={{ position: 'absolute', left: '-9999px', width: '210mm', minHeight: '297mm', padding: '15mm', boxSizing: 'border-box', backgroundColor: 'white', color: 'black', fontFamily: 'Arial, sans-serif', fontSize: '12px' }} 
+            >
+              {/* Header Invoice */}
+              <div style={{
+                backgroundColor: '#E81F25', // Merah Fresh Mart
+                color: 'white',
+                padding: '20px',
+                textAlign: 'center',
+                borderRadius: '8px 8px 0 0',
+                marginBottom: '20px',
+                boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
+              }}>
+                {/* Anda bisa menambahkan logo di sini, contoh: <img src="/path/to/logo.png" alt="Fresh Mart Logo" style={{ maxWidth: '150px', marginBottom: '10px' }} /> */}
+                <h1 style={{ margin: '0', fontSize: '32px', fontWeight: 'bold', letterSpacing: '1px' }}>FRESH MART</h1>
+                <p style={{ margin: '5px 0 0', fontSize: '16px', fontStyle: 'italic' }}>Shopping at Fresh Mart is the Right Choice❤️🛍️🎊</p>
+                <p style={{ margin: '10px 0 0', fontSize: '13px' }}>Jl. Hangtuah, Suka Mulia, Kec. Sail, Kota Pekanbaru, Riau 28114</p>
+                <p style={{ margin: '0', fontSize: '13px' }}>WhatsApp: +62 813-3358-7451 | Instagram: @freshmart_pku</p>
+              </div>
+
+              {/* Detail Transaksi */}
+              <div style={{ padding: '0 10px 20px 10px', fontSize: '14px', lineHeight: '1.6' }}>
+                <h2 style={{ color: '#E81F25', fontSize: '22px', marginBottom: '15px', borderBottom: '2px solid #eee', paddingBottom: '8px', textAlign: 'center' }}>
+                  STRUK PEMBELIAN
+                </h2>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
+                  <div>
+                    <p style={{ margin: '0' }}><strong>No. Transaksi:</strong> <span style={{ color: '#E81F25', fontWeight: 'bold' }}>#{trx.id}</span></p>
+                    <p style={{ margin: '0' }}><strong>Tanggal:</strong> {formatDate(trx.tanggalPembelian)}</p>
+                    {/* Opsional: Tampilkan nama pelanggan jika data user tersedia dan ingin ditambahkan */}
+                    {/* <p style={{ margin: '0' }}><strong>Pelanggan:</strong> {getUserName(trx.userId)}</p> */}
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <p style={{ margin: '0' }}>Terima Kasih Atas Kepercayaan Anda!</p>
+                  </div>
+                </div>
+
+                {/* Tabel Detail Produk */}
+                <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px', border: '1px solid #ddd' }}>
+                  <thead>
+                    <tr style={{ backgroundColor: '#3F9540', color: 'white' }}>
+                      <th style={{ padding: '12px', textAlign: 'left', border: '1px solid #ddd' }}>Produk</th>
+                      <th style={{ padding: '12px', textAlign: 'center', border: '1px solid #ddd' }}>Qty</th>
+                      <th style={{ padding: '12px', textAlign: 'right', border: '1px solid #ddd' }}>Harga</th>
+                      <th style={{ padding: '12px', textAlign: 'right', border: '1px solid #ddd' }}>Subtotal</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {trx.items.map((item, idx) => (
+                      <tr key={idx} style={{ borderBottom: '1px solid #eee' }}>
+                        <td style={{ padding: '10px 12px', border: '1px solid #ddd' }}>{getProductName(item.productId)}</td>
+                        <td style={{ padding: '10px 12px', textAlign: 'center', border: '1px solid #ddd' }}>{item.quantity}</td>
+                        <td style={{ padding: '10px 12px', textAlign: 'right', border: '1px solid #ddd' }}>{formatRupiah(item.price)}</td>
+                        <td style={{ padding: '10px 12px', textAlign: 'right', border: '1px solid #ddd', fontWeight: 'bold' }}>{formatRupiah(item.price * item.quantity)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr style={{ backgroundColor: '#f9f9f9' }}>
+                      <td colSpan="3" style={{ padding: '12px', textAlign: 'right', fontWeight: 'bold', border: '1px solid #ddd', fontSize: '15px' }}>Total Pembelian:</td>
+                      <td style={{ padding: '12px', textAlign: 'right', fontWeight: 'bold', color: '#E81F25', fontSize: '18px', border: '1px solid #ddd' }}>
+                        {formatRupiah(trx.items.reduce((total, item) => total + item.price * item.quantity, 0))}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+
+                {/* Catatan Tambahan / Ucapan Terima Kasih */}
+                <div style={{ marginTop: '30px', textAlign: 'center', fontSize: '13px', color: '#555', borderTop: '1px dashed #ccc', paddingTop: '20px' }}>
+                  <p style={{ margin: '0 0 5px 0' }}>Terima kasih telah berbelanja di <span style={{ fontWeight: 'bold', color: '#3F9540' }}>Fresh Mart Pekanbaru</span>!</p>
+                  <p style={{ margin: '0' }}>Produk segar untuk keluarga sehat Anda.</p>
+                </div>
+              </div>
+            </div>
+          ))}
+
 
           {/* Pagination Controls */}
           {totalPages > 1 && (

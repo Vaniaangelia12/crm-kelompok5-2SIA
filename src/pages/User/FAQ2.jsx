@@ -59,7 +59,7 @@ export default function FAQuser() {
         : "Belum Ada Pertanyaan Terpilih";
 
     return (
-    <div className="max-w-10xl mx-auto p-6 bg-white rounded-lg shadow-xl font-sans">
+    <div className="mt-4 max-w-6xl mx-auto bg-white p-6 rounded-xl shadow-lg border border-gray-10">
         <h2 className="text-4xl font-extrabold mb-8 text-center text-gray-800">Pertanyaan Umum (FAQ)</h2>
 
         <div className="flex flex-col md:flex-row gap-8">

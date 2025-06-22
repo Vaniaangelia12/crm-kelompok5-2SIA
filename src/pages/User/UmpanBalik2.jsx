@@ -47,7 +47,7 @@ export default function UmpanBalikUserPribadi() {
   if (!loggedUser) return null;
 
   return (
-    <div className="max-w-10xl mx-auto bg-white p-6 md:p-8 rounded-xl shadow-lg border border-gray-100">
+    <div className="mt-4 max-w-6xl mx-auto bg-white p-6 rounded-xl shadow-lg border border-gray-100">
       {/* Header dengan warna tema */}
       <div className="flex items-center mb-6">
         <div className="p-3 rounded-full bg-[#3F9540]/10 mr-4">
