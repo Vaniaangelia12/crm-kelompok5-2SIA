@@ -10,53 +10,45 @@ import {
   PackageCheck,
   Tag,
   Info,
-} from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+  LogOutIcon,
+} from 'lucide-react'
+import { Link, useLocation } from 'react-router-dom'
 
 const menuItems = [
-  { name: "Dashboard", icon: <LayoutDashboard />, path: "/" },
-  { name: "Pelanggan", icon: <Users />, path: "/pelanggan" },
-  { name: "Produk", icon: <Box />, path: "/produk" },
-  { name: "Laporan", icon: <BarChart2 />, path: "/laporan" },
-  { name: "Penjualan", icon: <ShoppingCart />, path: "/penjualan" },
-  { name: "Umpan Balik", icon: <Users />, path: "/umpanbalik" },
-  { name: "Riwayat Pembelian", icon: <PackageCheck />, path: "/riwayat-pembelian" },
+  { name: 'Dashboard', icon: <LayoutDashboard />, path: '/' },
+  { name: 'Produk', icon: <Box />, path: '/produk' },
+  { name: 'Umpan Balik', icon: <Users />, path: '/umpanbalik' },
   { name: 'FAQ', icon: <Info />, path: '/faq' },
-];
+  { name: 'Riwayat Pembelian', icon: <BarChart2 />, path: '/riwayatpembelian' },
+]
 
 const accountItems = [
   { name: 'Profil', icon: <Settings />, path: '/akun' },
-  { name: "Sign In", icon: <LogIn />, path: "/signin" },
-  { name: "Sign Up", icon: <UserPlus />, path: "/signup" },
-];
- 
+  { name: 'Logout', icon: <LogOutIcon />, path: '/logout' },
+]
 
 const Sidebar = () => {
   const location = useLocation();
   const isActive = (path) => location.pathname === path;
 
   return (
-    <aside className="bg-[#3F9540] w-64 h-screen shadow-md px-5 py-6 hidden md:block text-white">
-      {/* Logo dan Judul */}
-      <div className="flex items-center gap-3 mb-8">
-        <img
-          src="Logo FM.svg"
-          alt="Logo Fresh Mart"
-          className="w-10 h-10 object-contain"
-        />
-        <span className="text-2xl font-bold text-white">FRESH MART</span>
+    <aside className="bg-white w-64 h-screen shadow-lg px-4 py-6 hidden md:block border-r-2 border-gray-100">
+      {/* Logo dengan warna tema */}
+      <div className="text-2xl font-bold mb-8">
+        <span className="text-[#E81F25]">Fresh</span>
+        <span className="text-[#3F9540]"> Mart</span>
       </div>
-
+      
       {/* Menu Utama */}
       <nav className="space-y-1">
         {menuItems.map((item) => (
           <Link
             key={item.name}
             to={item.path}
-            className={`flex items-center gap-3 px-4 py-2 rounded-md transition-colors duration-200 ${
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
               isActive(item.path)
-                ? "bg-[#E81F25] text-white font-semibold"
-                : "text-white hover:bg-white hover:text-[#3F9540]"
+                ? 'bg-[#3F9540] text-white font-medium shadow-md'
+                : 'text-gray-600 hover:bg-[#3F9540]/10 hover:text-[#3F9540]'
             }`}
           >
             <span className={`w-5 h-5 ${
@@ -69,26 +61,40 @@ const Sidebar = () => {
         ))}
       </nav>
 
-      {/* Akun Section */}
-      <div className="mt-10 text-xs font-semibold text-white uppercase tracking-wide">
-        Akun
+      {/* Menu Akun */}
+      <div className="mt-8">
+        <div className="text-xs font-semibold text-gray-500 px-3 mb-2">AKUN</div>
+        <nav className="space-y-1">
+          {accountItems.map((item) => (
+            <Link
+              key={item.name}
+              to={item.path}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
+                isActive(item.path)
+                  ? 'bg-[#E81F25] text-white font-medium shadow-md'
+                  : 'text-gray-600 hover:bg-[#E81F25]/10 hover:text-[#E81F25]'
+              }`}
+            >
+              <span className={`w-5 h-5 ${
+                isActive(item.path) ? 'text-white' : 'text-[#E81F25]'
+              }`}>
+                {item.icon}
+              </span>
+              {item.name}
+            </Link>
+          ))}
+        </nav>
       </div>
-      <nav className="mt-3 space-y-1">
-        {accountItems.map((item) => (
-          <Link
-            key={item.name}
-            to={item.path}
-            className={`flex items-center gap-3 px-4 py-2 rounded-md transition-colors duration-200 ${
-              isActive(item.path)
-                ? "bg-[#E81F25] text-white font-semibold"
-                : "text-white hover:bg-white hover:text-[#3F9540]"
-            }`}
-          >
-            <span className="w-5 h-5">{item.icon}</span>
-            {item.name}
-          </Link>
-        ))}
-      </nav>
+
+      {/* Style tambahan untuk visual yang lebih baik */}
+      <style jsx>{`
+        .transition-all {
+          transition: all 0.2s ease;
+        }
+        .shadow-md {
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+      `}</style>
     </aside>
   );
 };
