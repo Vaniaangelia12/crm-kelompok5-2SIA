@@ -18,6 +18,7 @@ import Logout from './pages/Logout';
 import Register from './pages/Register';
 import Forgot from './pages/Forgot';
 import RiwayatPembelian from './pages/RiwayatPembelian';
+import ListUser from './pages/User/ListUser';
 
 export default function App() {
   return (
@@ -40,6 +41,7 @@ export default function App() {
         <Route path="/faq" element={<FAQ />} />
         <Route path="/akun" element={<Profile />} />
         <Route path="/riwayatpembelian" element={<RiwayatPembelian />} />
+        <Route path="/listuser" element={<ListUser />} />
       </Route>
       <Route
         element={

@@ -11,8 +11,10 @@ import {
   Tag,
   Info,
   LogOutIcon,
+  User,
+  FormInput,
 } from 'lucide-react'
-import { Link, useLocation } from 'react-router-dom'
+import { Form, Link, useLocation } from 'react-router-dom'
 
 const menuItems = [
   { name: 'Dashboard', icon: <LayoutDashboard />, path: '/' },
@@ -20,6 +22,7 @@ const menuItems = [
   { name: 'Umpan Balik', icon: <Users />, path: '/umpanbalik' },
   { name: 'FAQ', icon: <Info />, path: '/faq' },
   { name: 'Riwayat Pembelian', icon: <BarChart2 />, path: '/riwayatpembelian' },
+  { name: 'User Form', icon: <FormInput/>, path: '/listuser' },
 ]
 
 const accountItems = [
