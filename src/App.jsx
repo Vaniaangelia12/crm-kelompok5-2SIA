@@ -1,39 +1,60 @@
-//import { useState } from 'react'
-import {Routes, Route} from 'react-router-dom'
-import Dashboard from './pages/Dashboard'
-import MainLayout from './components/MainLayouts'
-import CustomerManagement from './pages/CustomerManagement'
-import SalesManagement from './pages/SalesManagement'
-import ProductManagement from './pages/Product'
-import SignUp from './pages/SignUp'
-import SignIn from './pages/SignIn'
-import ForgotPassword from './pages/ForgotPassword'
-import UmpanBalik from './pages/UmpanBalik'
-import RiwayatPembelian from './pages/RiwayatPembelian'
-import FAQ from './pages/FAQ'
-import Profile from './pages/Profil'
+import { Routes, Route } from 'react-router-dom';
+import Dashboard from './pages/Dashboard';
+import MainLayout from './components/MainLayouts';
+import ProductManagement from './pages/Product';
+import UmpanBalik from './pages/UmpanBalik';
+import FAQ from './pages/FAQ';
+import Profile from './pages/Profil';
+import UserLayout from './components/UserLayout';
+import DashboardUser from './pages/User/Dashboard2';
+import ProductUser from './pages/User/Product2';
+import FAQUser from './pages/User/FAQ2';
+import UmpanBalikUserPribadi from './pages/User/UmpanBalik2';
+import ProfilUser from './pages/User/Profil2';
+import RiwayatPembelianUserPribadi from './pages/User/RiwayatPembelian2';
+import Login from './pages/Login';
+import ProtectedRoute from './components/ProtectedRoute'; // <--- Tambahkan ini
+import Logout from './pages/Logout';
+import Register from './pages/Register';
+import Forgot from './pages/Forgot';
+import RiwayatPembelian from './pages/RiwayatPembelian';
 
 export default function App() {
   return (
-   <Routes>
-      <Route element={<MainLayout/>}>
-        <Route path="/" element={<Dashboard/>}/>
-        <Route path="/pelanggan" element={<CustomerManagement/>}/>
-        <Route path="/penjualan" element={<SalesManagement/>}/>
-        <Route path="/produk" element={<ProductManagement/>}/>
-        <Route path="/umpanbalik" element={<UmpanBalik/>}/>
-        <Route path="/riwayat-pembelian" element={<RiwayatPembelian />} />        
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/forgot" element={<Forgot />} />
+      <Route path="/logout" element={<Logout />} /> {/* Route logout */}
+      {/* Semua route yang lain dibungkus ProtectedRoute */}
+      <Route
+        element={
+          <ProtectedRoute>
+            <MainLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/produk" element={<ProductManagement />} />
+        <Route path="/umpanbalik" element={<UmpanBalik />} />
+        <Route path="/faq" element={<FAQ />} />
+        <Route path="/akun" element={<Profile />} />
+        <Route path="/riwayatpembelian" element={<RiwayatPembelian />} />
       </Route>
-      <Route path="/signup" element={<SignUp/>}/>
-      <Route path="/signin" element={<SignIn/>}/>
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-    <Route element={<MainLayout/>}>
-    <Route path="/" element={<Dashboard/>}/>
-    <Route path="/produk" element={<ProductManagement/>}/>
-    <Route path="/umpanbalik" element={<UmpanBalik/>}/>
-    <Route path="/faq" element={<FAQ/>}/>
-    <Route path="/akun" element={<Profile/>}/>
-    </Route>
-   </Routes>
-  )
+      <Route
+        element={
+          <ProtectedRoute>
+            <UserLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="/user" element={<DashboardUser />} />
+        <Route path="/user/produk" element={<ProductUser />} />
+        <Route path="/user/faq" element={<FAQUser />} />
+        <Route path="/user/umpanbalik" element={<UmpanBalikUserPribadi />} />
+        <Route path="/user/akun" element={<ProfilUser />} />
+        <Route path="/user/riwayat" element={<RiwayatPembelianUserPribadi />} />
+      </Route>
+    </Routes>
+  );
 }

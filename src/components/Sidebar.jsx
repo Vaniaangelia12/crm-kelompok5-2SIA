@@ -59,7 +59,11 @@ const Sidebar = () => {
                 : "text-white hover:bg-white hover:text-[#3F9540]"
             }`}
           >
-            <span className="w-5 h-5">{item.icon}</span>
+            <span className={`w-5 h-5 ${
+              isActive(item.path) ? 'text-white' : 'text-[#3F9540]'
+            }`}>
+              {item.icon}
+            </span>
             {item.name}
           </Link>
         ))}
