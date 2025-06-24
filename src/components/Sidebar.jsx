@@ -1,17 +1,21 @@
 import {
   LayoutDashboard,
-  Users,         // untuk pelanggan
-  ShoppingCart,  // untuk penjualan
-  Box,           // untuk produk
-  BarChart2,     // untuk laporan
-  Settings,      // untuk pengaturan akun
+  Users,           // untuk pelanggan
+  ShoppingCart,    // untuk penjualan
+  Box,             // untuk produk
+  BarChart2,       // untuk laporan
+  Settings,        // untuk pengaturan akun
   User,
   LogIn,
   UserPlus,
   Info,
   LogOutIcon,
+  UsersIcon,
+  Mail,
+  PercentSquare,
 } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
+import logoFreshMart from '../assets/images/logo_freshmart.png'; // Import the image
 
 const menuItems = [
   { name: 'Dashboard', icon: <LayoutDashboard />, path: '/' },
@@ -19,6 +23,9 @@ const menuItems = [
   { name: 'Umpan Balik', icon: <Users />, path: '/umpanbalik' },
   { name: 'FAQ', icon: <Info />, path: '/faq' },
   { name: 'Riwayat Pembelian', icon: <BarChart2 />, path: '/riwayatpembelian' },
+  // { name: 'Kirim Notifikasi', icon: <Mail />, path: '/notifikasi' },
+  { name: 'Jadwalkan Promo', icon: <PercentSquare />, path: '/jadwalpromo' },
+  // { name: 'List User', icon: <UsersIcon />, path: '/listuser' },
 ]
 
 const accountItems = [
@@ -33,10 +40,13 @@ const Sidebar = () => {
 
   return (
     <aside className="bg-white w-64 h-screen shadow-lg px-4 py-6 hidden md:block border-r-2 border-gray-100">
-      {/* Logo dengan warna tema */}
-      <div className="text-2xl font-bold mb-8">
-        <span className="text-[#E81F25]">Fresh</span>
-        <span className="text-[#3F9540]"> Mart</span>
+      {/* Logo dengan warna tema dan gambar */}
+      <div className="flex items-center gap-2 mb-8"> {/* Added flex and items-center for alignment */}
+        <img src={logoFreshMart} alt="Fresh Mart Logo" className="h-10 w-auto" /> {/* Added the logo image */}
+        <span className="text-2xl font-bold">
+          <span className="text-[#E81F25]">Fresh</span>
+          <span className="text-[#3F9540]"> Mart</span>
+        </span>
       </div>
       
       {/* Menu Utama */}

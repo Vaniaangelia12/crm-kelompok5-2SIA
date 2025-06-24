@@ -13,11 +13,15 @@ import UmpanBalikUserPribadi from './pages/User/UmpanBalik2';
 import ProfilUser from './pages/User/Profil2';
 import RiwayatPembelianUserPribadi from './pages/User/RiwayatPembelian2';
 import Login from './pages/Login';
-import ProtectedRoute from './components/ProtectedRoute'; // <--- Tambahkan ini
+import ProtectedRoute from './components/ProtectedRoute';
 import Logout from './pages/Logout';
 import Register from './pages/Register';
 import Forgot from './pages/Forgot';
 import RiwayatPembelian from './pages/RiwayatPembelian';
+import ListUser from './pages/ListUser';
+import ResetPasswordConfirm from './pages/ResetPasswordConfirm'; // <--- IMPORT KOMPONEN BARU INI
+import SendNotification from './pages/SendNotification';
+import SchedulePromotion from './pages/SchedulePromotion';
 
 export default function App() {
   return (
@@ -25,7 +29,10 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/forgot" element={<Forgot />} />
-      <Route path="/logout" element={<Logout />} /> {/* Route logout */}
+      <Route path="/logout" element={<Logout />} />
+      {/* RUTE BARU UNTUK KONFIRMASI RESET PASSWORD */}
+      <Route path="/reset-password-confirm" element={<ResetPasswordConfirm />} /> {/* <--- TAMBAHKAN ROUTE INI */}
+
       {/* Semua route yang lain dibungkus ProtectedRoute */}
       <Route
         element={
@@ -40,6 +47,9 @@ export default function App() {
         <Route path="/faq" element={<FAQ />} />
         <Route path="/akun" element={<Profile />} />
         <Route path="/riwayatpembelian" element={<RiwayatPembelian />} />
+        <Route path="/notifikasi" element={<SendNotification />} />
+        <Route path="/jadwalpromo" element={<SchedulePromotion />} />
+        <Route path="/listuser" element={<ListUser />} />
       </Route>
       <Route
         element={

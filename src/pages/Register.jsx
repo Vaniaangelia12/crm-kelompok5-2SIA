@@ -1,9 +1,13 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom"; // Import useNavigate
+
+import { supabase } from '../supabase'; // Import Supabase client
 
 export default function Register() {
+  const navigate = useNavigate(); // Inisialisasi useNavigate
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({
+    NIK: "", // Tambahkan NIK ke state form
     nama_lengkap: "",
     email: "",
     password: "",
@@ -14,23 +18,105 @@ export default function Register() {
     alamat: "",
     nomor_hp: "",
   });
+  const [loading, setLoading] = useState(false); // State untuk loading
+  const [errorMessage, setErrorMessage] = useState(""); // State untuk pesan error
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+    // Bersihkan pesan error saat user mulai mengetik lagi
+    if (errorMessage) {
+      setErrorMessage("");
+    }
   };
 
-  const nextStep = () => setStep((prev) => Math.min(prev + 1, 3));
+  const nextStep = () => {
+    // Basic validation before moving to the next step
+    if (step === 1) {
+      if (!form.nama_lengkap || !form.email || !form.password || !form.konfirmasi_password || !form.NIK) {
+        setErrorMessage("Semua kolom di langkah ini harus diisi.");
+        return;
+      }
+      if (form.password !== form.konfirmasi_password) {
+        setErrorMessage("Password dan konfirmasi password tidak cocok!");
+        return;
+      }
+      if (form.password.length < 8) {
+        setErrorMessage("Password minimal harus 8 karakter.");
+        return;
+      }
+      if (!/^[0-9]{16}$/.test(form.NIK)) {
+        setErrorMessage("NIK harus terdiri dari 16 digit angka.");
+        return;
+      }
+    } else if (step === 2) {
+      if (!form.tempat_lahir || !form.tanggal_lahir || !form.jenis_kelamin) {
+        setErrorMessage("Semua kolom di langkah ini harus diisi.");
+        return;
+      }
+    }
+    setErrorMessage(""); // Clear any previous error
+    setStep((prev) => Math.min(prev + 1, 3));
+  };
+
   const prevStep = () => setStep((prev) => Math.max(prev - 1, 1));
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (form.password !== form.konfirmasi_password) {
-      alert("Password dan konfirmasi password tidak cocok!");
+      setErrorMessage("Password dan konfirmasi password tidak cocok!");
       return;
     }
-    // Proses pendaftaran di sini
-    alert("Registrasi berhasil!");
-    // Reset form atau redirect
+
+    setLoading(true);
+    setErrorMessage("");
+
+    try {
+      // 1. Daftar pengguna menggunakan Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: form.email,
+        password: form.password,
+      });
+
+      if (authError) {
+        throw new Error(authError.message);
+      }
+
+      const userId = authData.user.id;
+
+      // 2. Simpan data profil ke tabel 'pengguna'
+      const { error: profileError } = await supabase.from('pengguna').insert({
+        id: userId, // Gunakan ID dari Supabase Auth
+        nik: form.NIK, // Menggunakan 'nik' (huruf kecil) sesuai nama kolom database
+        nama_lengkap: form.nama_lengkap,
+        email: form.email,
+        tempat_lahir: form.tempat_lahir,
+        tanggal_lahir: form.tanggal_lahir,
+        jenis_kelamin: form.jenis_kelamin,
+        alamat: form.alamat,
+        nomor_hp: form.nomor_hp,
+        tanggal_bergabung: new Date().toISOString(), // Otomatis set tanggal bergabung
+        total_poin: 0,
+        total_saldo: 0,
+        role: 'user', // Atur peran default
+      });
+
+      if (profileError) {
+        // Jika ada error saat insert profile, coba hapus user dari auth (opsional, untuk cleanup)
+        // Perlu diingat, supabase.auth.admin.deleteUser memerlukan service_role key,
+        // yang TIDAK disarankan digunakan di client-side aplikasi nyata karena alasan keamanan.
+        // Untuk contoh ini, kita biarkan saja user di auth jika profile insert gagal.
+        console.warn("Could not delete user from auth after profile insert failed (client-side limitation). User ID:", userId);
+        throw new Error(profileError.message);
+      }
+
+      alert("Registrasi berhasil! Silakan cek email Anda untuk verifikasi dan login.");
+      navigate("/login"); // Redirect ke halaman login setelah berhasil
+    } catch (error) {
+      console.error("Gagal mendaftar:", error.message);
+      setErrorMessage("Gagal mendaftar: " + error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -67,10 +153,44 @@ export default function Register() {
           </div>
         </div>
 
+        {errorMessage && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <strong className="font-bold">Error!</strong>
+            <span className="block sm:inline"> {errorMessage}</span>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Step 1: Informasi Akun */}
           {step === 1 && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {/* NIK field */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="NIK">
+                  NIK
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    id="NIK"
+                    name="NIK" // Important: name should match state key
+                    value={form.NIK}
+                    onChange={handleChange}
+                    required
+                    maxLength="16" // Common NIK length
+                    pattern="[0-9]{16}" // Only numbers, exactly 16 digits
+                    title="NIK harus terdiri dari 16 digit angka."
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3F9540] focus:border-transparent"
+                    placeholder="Masukkan 16 digit NIK Anda"
+                  />
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                    <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="nama_lengkap">
                   Nama Lengkap
@@ -292,6 +412,7 @@ export default function Register() {
                 type="button"
                 onClick={prevStep}
                 className="px-6 py-3 bg-white border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition duration-150"
+                disabled={loading} // Disable during loading
               >
                 Kembali
               </button>
@@ -304,6 +425,7 @@ export default function Register() {
                 type="button"
                 onClick={nextStep}
                 className="px-6 py-3 bg-gradient-to-r from-[#3F9540] to-[#2E7C30] text-white font-medium rounded-lg shadow-md hover:from-[#2E7C30] hover:to-[#3F9540] transition duration-150"
+                disabled={loading} // Disable during loading
               >
                 Lanjut
               </button>
@@ -311,8 +433,9 @@ export default function Register() {
               <button
                 type="submit"
                 className="px-8 py-3 bg-gradient-to-r from-[#3F9540] to-[#2E7C30] text-white font-medium rounded-lg shadow-md hover:from-[#2E7C30] hover:to-[#3F9540] transition duration-150"
+                disabled={loading} // Disable during loading
               >
-                Daftar Sekarang
+                {loading ? 'Mendaftar...' : 'Daftar Sekarang'}
               </button>
             )}
           </div>
