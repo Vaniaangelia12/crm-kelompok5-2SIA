@@ -13,12 +13,16 @@ import UmpanBalikUserPribadi from './pages/User/UmpanBalik2';
 import ProfilUser from './pages/User/Profil2';
 import RiwayatPembelianUserPribadi from './pages/User/RiwayatPembelian2';
 import Login from './pages/Login';
-import ProtectedRoute from './components/ProtectedRoute'; // <--- Tambahkan ini
+import ProtectedRoute from './components/ProtectedRoute';
 import Logout from './pages/Logout';
 import Register from './pages/Register';
 import Forgot from './pages/Forgot';
 import RiwayatPembelian from './pages/RiwayatPembelian';
-import ListUser from './pages/User/ListUser';
+import ListUser from './pages/ListUser';
+import ResetPasswordConfirm from './pages/ResetPasswordConfirm';
+import SendNotification from './pages/SendNotification';
+import SchedulePromotion from './pages/SchedulePromotion';
+import DaftarMembership from './pages/DaftarMembership';
 
 export default function App() {
   return (
@@ -26,11 +30,12 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/forgot" element={<Forgot />} />
-      <Route path="/logout" element={<Logout />} /> {/* Route logout */}
-      {/* Semua route yang lain dibungkus ProtectedRoute */}
+      <Route path="/logout" element={<Logout />} />
+      <Route path="/reset-password-confirm" element={<ResetPasswordConfirm />} />
+
       <Route
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["admin"]}>
             <MainLayout />
           </ProtectedRoute>
         }
@@ -41,11 +46,15 @@ export default function App() {
         <Route path="/faq" element={<FAQ />} />
         <Route path="/akun" element={<Profile />} />
         <Route path="/riwayatpembelian" element={<RiwayatPembelian />} />
+        <Route path="/notifikasi" element={<SendNotification />} />
+        <Route path="/jadwalpromo" element={<SchedulePromotion />} />
         <Route path="/listuser" element={<ListUser />} />
+        <Route path="/listpengguna" element={<DaftarMembership />} />
       </Route>
+
       <Route
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["user"]}>
             <UserLayout />
           </ProtectedRoute>
         }

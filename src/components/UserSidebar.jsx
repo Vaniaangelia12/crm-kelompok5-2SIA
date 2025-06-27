@@ -8,6 +8,7 @@ import {
   LogOut,
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
+import logoFreshMart from '../assets/images/logo_freshmart.png'; // Import the image
 
 const menuItems = [
   { name: 'Dashboard', icon: LayoutDashboard, path: '/user' },
@@ -32,10 +33,13 @@ const UserSidebar = () => {
 
   return (
     <aside className="bg-white w-64 h-screen shadow-lg px-4 py-6 hidden md:block border-r-2 border-gray-100">
-      {/* Logo */}
-      <div className="text-2xl font-bold mb-8">
-        <span style={{ color: primaryColor }}>Fresh</span>
-        <span style={{ color: secondaryColor }}> Mart</span>
+      {/* Logo dengan warna tema dan gambar */}
+      <div className="flex items-center gap-2 mb-8"> {/* Added flex and items-center for alignment */}
+        <img src={logoFreshMart} alt="Fresh Mart Logo" className="h-10 w-auto" /> {/* Added the logo image */}
+        <span className="text-2xl font-bold">
+          <span style={{ color: primaryColor }}>Fresh</span>
+          <span style={{ color: secondaryColor }}> Mart</span>
+        </span>
       </div>
 
       {/* Menu Utama */}

@@ -17,12 +17,6 @@ export default function Dashboard2() {
     { name: 'Riwayat Pembelian', icon: ClipboardList, path: '/user/riwayat', color: 'bg-orange-100 text-orange-600' },
   ];
 
-  // Menu sekunder
-  const secondaryMenu = [
-    { name: 'Promo Hari Ini', icon: Percent, path: '/promo' },
-    { name: 'Keamanan Akun', icon: Shield, path: '/security' },
-  ];
-
   const handleLogout = () => {
     sessionStorage.removeItem('loggedUser');
     navigate('/login');
@@ -112,25 +106,6 @@ export default function Dashboard2() {
               <p className="text-sm text-gray-600 mt-1">Segar dan higienis</p>
             </div>
           </div>
-        </div>
-
-        {/* Secondary Menu */}
-        <div className="bg-white rounded-xl shadow-md overflow-hidden">
-          {secondaryMenu.map((item, index) => (
-            <div 
-              key={index}
-              onClick={() => navigate(item.path)}
-              className={`p-4 flex items-center justify-between border-b border-gray-100 last:border-0 cursor-pointer hover:bg-gray-50 transition ${index === 0 ? 'rounded-t-xl' : ''} ${index === secondaryMenu.length - 1 ? 'rounded-b-xl' : ''}`}
-            >
-              <div className="flex items-center">
-                <div className="p-2 rounded-full bg-gray-100 mr-3">
-                  <item.icon size={18} className="text-gray-600" />
-                </div>
-                <span className="font-medium">{item.name}</span>
-              </div>
-              <ChevronRight size={18} className="text-gray-400" />
-            </div>
-          ))}
         </div>
       </main>
 

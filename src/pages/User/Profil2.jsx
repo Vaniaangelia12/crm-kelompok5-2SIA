@@ -1,25 +1,21 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { UserDummy } from '../../data/UserDummy';
-import { TransaksiDummy } from '../../data/TransaksiDummy';
-// Hapus import NotifikasiDummy jika Anda tidak ingin menggunakannya sebagai default
-// import { NotifikasiDummy } from '../../data/NotifikasiDummy'; // Hapus ini jika hanya ingin notifikasi dinamis
-
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { supabase } from '../../supabase'; // Import Supabase client
 import {
   User, Mail, Calendar, MapPin, Phone, Award, ClipboardList, PenTool, Save, X, Hash,
   Gift, Coins, Bell, CheckCircle, Clock, Star, Activity, ZapOff
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+
+// Fungsi utilitas untuk memvalidasi format UUID
+const isValidUUID = (uuid) => {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return typeof uuid === 'string' && uuidRegex.test(uuid);
+};
 
 export default function Profile2() {
-  const [user, setLoggedInUser] = useState(() => {
-    const storedUser = sessionStorage.getItem('loggedUser');
-    return storedUser ? JSON.parse(storedUser) : null;
-  });
-
-  const initialUserData = useMemo(() => {
-    return user ? UserDummy.find(u => u.id === user.id) || {} : {};
-  }, [user]);
-
-  const [userData, setUserData] = useState(initialUserData);
+  const navigate = useNavigate();
+  const [loggedUserSession, setLoggedUserSession] = useState(null); // Ini id dan email dari sessionStorage/Auth
+  const [userData, setUserData] = useState(null); // Ini data profil lengkap dari tabel pengguna
   const [isEditing, setIsEditing] = useState(false);
   const [editedData, setEditedData] = useState({});
 
@@ -28,8 +24,13 @@ export default function Profile2() {
   const [redeemMessage, setRedeemMessage] = useState("");
 
   const [totalSaldo, setTotalSaldo] = useState(0);
-  // Inisialisasi userNotifications dari sessionStorage atau array kosong
   const [userNotifications, setUserNotifications] = useState([]);
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Deklarasi state untuk status membership dipindahkan ke atas
+  const [currentMembershipStatus, setCurrentMembershipStatus] = useState("Memuat...");
 
   const primaryColor = '#E81F25';
   const secondaryColor = '#3F9540';
@@ -38,102 +39,149 @@ export default function Profile2() {
   const darkRed = '#C2181B';
   const darkGreen = '#2E7C30';
 
-  useEffect(() => {
-    if (user && user.role === "user") {
-      // PERBAIKAN: Load userData di sini agar selalu sinkron
-      setUserData(UserDummy.find(u => u.id === user.id) || {});
+  // --- Fungsi Pembantu (untuk membership dan transaksi) ---
+  const getStatusMembership = useCallback(async (userId) => {
+    // Untuk mendapatkan status membership, kita perlu transaksi dari database
+    const { data: transaksiData, error: transaksiError } = await supabase
+      .from('transaksi')
+      .select('tanggal_pembelian')
+      .eq('id_pengguna', userId)
+      .order('tanggal_pembelian', { ascending: false });
 
-      // Load totalPoin from sessionStorage or calculate it
-      const savedPoin = sessionStorage.getItem(`userPoin_${user.id}`);
-      if (savedPoin !== null) {
-        setTotalPoin(parseInt(savedPoin, 10));
-      } else {
-        const transaksiUser = TransaksiDummy.filter(trx => trx.userId === user.id);
-        let calculatedPoin = 0;
-        transaksiUser.forEach(trx => {
-          const totalPembelian = trx.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-          calculatedPoin += Math.floor(totalPembelian / 10000);
-        });
-        setTotalPoin(calculatedPoin);
-        // Simpan poin awal ke sessionStorage agar persisten
-        sessionStorage.setItem(`userPoin_${user.id}`, calculatedPoin.toString());
-      }
-
-      // Load totalSaldo from sessionStorage
-      const savedSaldo = sessionStorage.getItem(`userSaldo_${user.id}`);
-      setTotalSaldo(savedSaldo ? parseFloat(savedSaldo) : 0);
-
-      // Load notifications from sessionStorage or use a default (or generate)
-      const savedNotifications = sessionStorage.getItem(`userNotifications_${user.id}`);
-      if (savedNotifications) {
-        setUserNotifications(JSON.parse(savedNotifications).sort((a, b) => new Date(b.waktu) - new Date(a.waktu)));
-      } else {
-        // Jika tidak ada di sessionStorage, generate dari TransaksiDummy
-        // Atau biarkan kosong dan hanya tambahkan notifikasi penukaran poin
-        const initialNotifications = generateInitialNotifications(user.id); // Fungsi baru untuk generate awal
-        setUserNotifications(initialNotifications.sort((a, b) => new Date(b.waktu) - new Date(a.waktu)));
-        sessionStorage.setItem(`userNotifications_${user.id}`, JSON.stringify(initialNotifications));
-      }
-
-    } else {
-      // Reset state jika user tidak ada
-      setUserData({});
-      setTotalPoin(0);
-      setTotalSaldo(0);
-      setUserNotifications([]);
+    if (transaksiError) {
+      console.error("Error fetching transactions for membership:", transaksiError.message);
+      return "Error"; // Handle error appropriately
     }
-  }, [user]);
 
-  // Fungsi bantu untuk generate notifikasi awal (seperti NotifikasiDummy)
-  const generateInitialNotifications = (userId) => {
-    const notifications = [];
-    let notifId = 1; // ID sementara, akan diganti oleh sistem nyata
+    const transaksiUser = transaksiData.map(trx => ({
+      tanggalPembelian: trx.tanggal_pembelian
+    }));
 
-    // Notifikasi Transaksi dan Poin Reward dari TransaksiDummy
-    const transaksiUser = TransaksiDummy.filter(trx => trx.userId === userId);
-    transaksiUser.forEach(trx => {
-      const total = trx.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const now = new Date();
+    // Pastikan tanggal_bergabung ada dan valid
+    const joinedAt = userData?.tanggal_bergabung ? new Date(userData.tanggal_bergabung) : null;
+    
+    if (!joinedAt) return "Baru"; // Jika tanggal_bergabung tidak ada
 
-      notifications.push({
-        id: notifId++,
-        userId: trx.userId,
-        pesan: `Transaksi #${trx.id} berhasil dilakukan.`,
-        status: "belum_dibaca",
-        waktu: trx.tanggalPembelian,
-      });
+    const selisihHari = Math.floor((now - joinedAt) / (1000 * 60 * 60 * 24));
+    if (selisihHari < 7 && transaksiUser.length === 0) return "Baru";
 
-      const poin = Math.floor(total / 10000);
-      if (poin > 0) {
-        notifications.push({
-          id: notifId++,
-          userId: trx.userId,
-          pesan: `Kamu mendapatkan ${poin} poin dari pembelian!`,
-          status: "belum_dibaca",
-          waktu: trx.tanggalPembelian,
-        });
+    const transaksi7Hari = transaksiUser.filter(trx => (now - new Date(trx.tanggalPembelian)) / (1000 * 60 * 60 * 24) <= 7);
+    if (transaksi7Hari.length >= 28) return "Loyal";
+    if (transaksi7Hari.length >= 14) return "Aktif";
+
+    const transaksi30Hari = transaksiUser.filter(trx => (now - new Date(trx.tanggalPembelian)) / (1000 * 60 * 60 * 24) <= 30);
+    if (transaksi30Hari.length === 0) return "Pasif";
+
+    return "Aktif";
+  }, [userData]); // userData dibutuhkan untuk tanggal_bergabung
+
+  // --- Fetch Data Pengguna, Poin, Saldo, dan Notifikasi dari Supabase ---
+  const fetchProfileData = useCallback(async (userId) => {
+    setLoading(true);
+    setError(null);
+    try {
+      // 1. Fetch data profil pengguna
+      const { data: profileData, error: profileError } = await supabase
+        .from('pengguna')
+        .select(`
+          id,
+          nik,
+          nama_lengkap,
+          email,
+          tempat_lahir,
+          tanggal_lahir,
+          jenis_kelamin,
+          alamat,
+          nomor_hp,
+          tanggal_bergabung,
+          total_poin,
+          total_saldo,
+          role
+        `)
+        .eq('id', userId)
+        .single();
+
+      if (profileError) {
+        throw profileError;
       }
-    });
+      if (!profileData) {
+        throw new Error("Data pengguna tidak ditemukan di database.");
+      }
 
-    // Notifikasi Umum (jika ingin dimasukkan juga)
-    const umum = [
-      "Jangan lewatkan promo diskon 20% minggu ini!",
-      "Cek produk baru di Fresh Mart!",
-      "Dapatkan cashback jika belanja minimal Rp50.000!"
-    ];
-    const userGeneralNotification = umum[Math.floor(Math.random() * umum.length)];
-    notifications.push({
-      id: notifId++,
-      userId: userId,
-      pesan: userGeneralNotification,
-      status: "belum_dibaca",
-      waktu: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString()
-    });
+      setUserData(profileData);
+      setTotalPoin(profileData.total_poin || 0);
+      setTotalSaldo(profileData.total_saldo || 0);
 
-    return notifications;
-  };
+      // Simpan juga ke sessionStorage untuk konsistensi dengan komponen lain
+      sessionStorage.setItem('loggedUser', JSON.stringify({
+        id: profileData.id,
+        email: profileData.email,
+        role: profileData.role
+      }));
+      sessionStorage.setItem(`userSaldo_${profileData.id}`, (profileData.total_saldo || 0).toString());
+      sessionStorage.setItem(`userPoin_${profileData.id}`, (profileData.total_poin || 0).toString());
 
 
-  const handleRedeemPoin = () => {
+      // 2. Fetch notifikasi pengguna
+      // MODIFIKASI: Ambil notifikasi yang id_pengguna-nya adalah userId ATAU NULL
+      const { data: notificationsData, error: notificationsError } = await supabase
+        .from('notifikasi')
+        .select('*')
+        .or(`id_pengguna.eq.${userId},id_pengguna.is.null`) // Menggunakan klausa OR
+        .order('waktu', { ascending: false }); // Urutkan notifikasi terbaru dulu
+
+      if (notificationsError) {
+        throw notificationsError;
+      }
+      setUserNotifications(notificationsData);
+
+    } catch (err) {
+      console.error("Error fetching profile data:", err.message);
+      setError("Gagal memuat data profil: " + err.message);
+      // Jika terjadi error fetching, mungkin user belum terdaftar di tabel 'pengguna'
+      // Atau ID di session storage tidak cocok dengan DB
+      alert("Gagal memuat profil Anda. Silakan coba login ulang.");
+      navigate("/login");
+    } finally {
+      setLoading(false);
+    }
+  }, [navigate]);
+
+  useEffect(() => {
+    const userSession = JSON.parse(sessionStorage.getItem('loggedUser'));
+    setLoggedUserSession(userSession);
+
+    if (userSession && userSession.id) {
+      // Validasi UUID
+      if (!isValidUUID(userSession.id)) {
+        setError('ID pengguna tidak dalam format yang benar (UUID). Harap login ulang.');
+        alert('ID pengguna tidak valid. Silakan login ulang.');
+        setLoading(false);
+        navigate("/login");
+        return;
+      }
+      fetchProfileData(userSession.id);
+    } else {
+      setLoading(false);
+      // Jika tidak ada user di session, redirect ke login
+      // alert("Silakan login untuk melihat profil Anda."); // Opsional
+      // navigate("/login"); // Opsional
+    }
+  }, [fetchProfileData, navigate]);
+
+  // Effect untuk menghitung status membership secara asinkron (dipindahkan ke sini)
+  useEffect(() => {
+    if (loggedUserSession && userData) {
+      getStatusMembership(loggedUserSession.id).then(status => {
+          setCurrentMembershipStatus(status);
+      });
+    }
+  }, [loggedUserSession, userData, getStatusMembership]);
+
+
+  // --- Logika Penukaran Poin ---
+  const handleRedeemPoin = async () => {
     const poin = parseInt(poinToRedeem);
 
     if (isNaN(poin) || poin <= 0) {
@@ -149,47 +197,126 @@ export default function Profile2() {
       return;
     }
 
+    setLoading(true);
+    setRedeemMessage(""); // Clear previous message
+    setError(null);
+
     const saldoEarned = poin * 100;
     const newPoin = totalPoin - poin;
     const newSaldo = totalSaldo + saldoEarned;
 
-    setTotalPoin(newPoin);
-    setTotalSaldo(newSaldo);
-    setPoinToRedeem('');
-    setRedeemMessage(`Berhasil menukar ${poin} poin menjadi ${formatRupiah(saldoEarned)} saldo.`);
+    try {
+      // Update poin dan saldo di database
+      const { error: updateError } = await supabase
+        .from('pengguna')
+        .update({
+          total_poin: newPoin,
+          total_saldo: newSaldo
+        })
+        .eq('id', loggedUserSession.id);
 
-    if (user) {
-      sessionStorage.setItem(`userSaldo_${user.id}`, newSaldo.toString());
-      sessionStorage.setItem(`userPoin_${user.id}`, newPoin.toString());
+      if (updateError) {
+        throw updateError;
+      }
 
-      // --- LOGIKA MENAMBAH NOTIFIKASI PENUKARAN POIN ---
+      // Update state lokal
+      setTotalPoin(newPoin);
+      setTotalSaldo(newSaldo);
+      setPoinToRedeem('');
+      setRedeemMessage(`Berhasil menukar ${poin} poin menjadi ${formatRupiah(saldoEarned)} saldo.`);
+
+      // Update sessionStorage
+      sessionStorage.setItem(`userSaldo_${loggedUserSession.id}`, newSaldo.toString());
+      sessionStorage.setItem(`userPoin_${loggedUserSession.id}`, newPoin.toString());
+
+      // Tambahkan notifikasi penukaran poin ke database
       const newNotification = {
-        id: Date.now(), // Gunakan timestamp sebagai ID unik sementara
-        userId: user.id,
+        id_pengguna: loggedUserSession.id,
         pesan: `Poin berhasil ditukar! Anda menukar ${poin} poin menjadi ${formatRupiah(saldoEarned)} saldo.`,
         status: "belum_dibaca",
-        waktu: new Date().toISOString(), // Waktu saat ini
+        waktu: new Date().toISOString(),
       };
 
-      // Update state notifikasi
-      setUserNotifications(prevNotifications => {
-        const updatedNotifications = [newNotification, ...prevNotifications]; // Tambahkan di paling atas
-        // Simpan notifikasi yang diperbarui ke sessionStorage
-        sessionStorage.setItem(`userNotifications_${user.id}`, JSON.stringify(updatedNotifications));
-        return updatedNotifications;
-      });
-      // --- AKHIR LOGIKA MENAMBAH NOTIFIKASI PENUKARAN POIN ---
+      const { error: notificationError } = await supabase
+        .from('notifikasi') // Nama tabel notifikasi
+        .insert([newNotification]);
+
+      if (notificationError) {
+        console.error("Gagal menambahkan notifikasi:", notificationError.message);
+        // Jangan throw error di sini karena penukaran poin sudah berhasil
+      } else {
+        // Fetch notifikasi ulang untuk menampilkan yang baru
+        fetchProfileData(loggedUserSession.id);
+      }
+
+    } catch (err) {
+      console.error("Gagal menukar poin:", err.message);
+      setError("Gagal menukar poin: " + err.message);
+      setRedeemMessage("Gagal menukar poin: " + err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const statusMembership = getStatusMembership(userData.id, userData.tanggal_bergabung);
+  // --- Logika Edit Profil ---
+  useEffect(() => {
+    if (isEditing && userData) {
+      setEditedData({
+        nama_lengkap: userData.nama_lengkap || '',
+        email: userData.email || '',
+        tempat_lahir: userData.tempat_lahir || '',
+        // Pastikan tanggal_lahir diformat ke 'YYYY-MM-DD' untuk input type="date"
+        tanggal_lahir: userData.tanggal_lahir ? new Date(userData.tanggal_lahir).toISOString().split('T')[0] : '', 
+        jenis_kelamin: userData.jenis_kelamin || '',
+        alamat: userData.alamat || '',
+        nomor_hp: userData.nomor_hp || ''
+      });
+    }
+  }, [isEditing, userData]);
 
-  const getMembershipIcon = () => {
-    switch (statusMembership) {
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setEditedData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSave = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { error: updateError } = await supabase
+        .from('pengguna')
+        .update(editedData)
+        .eq('id', loggedUserSession.id);
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      setUserData(prev => ({ ...prev, ...editedData })); // Update state lokal
+      setIsEditing(false);
+      alert("Perubahan profil berhasil disimpan!");
+    } catch (err) {
+      console.error("Gagal menyimpan perubahan profil:", err.message);
+      setError("Gagal menyimpan perubahan profil: " + err.message);
+      alert("Gagal menyimpan perubahan profil: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+    setEditedData({}); // Reset edited data
+  };
+
+
+  const getMembershipIcon = (status) => {
+    switch (status) {
       case 'Loyal': return <Star className="text-yellow-500" />;
       case 'Aktif': return <Activity className="text-green-500" />;
       case 'Pasif': return <ZapOff className="text-gray-500" />;
-      default: return <Clock className="text-blue-500" />;
+      case 'Baru': return <Clock className="text-blue-500" />;
+      default: return <User className="text-gray-500" />;
     }
   };
 
@@ -201,65 +328,31 @@ export default function Profile2() {
     }).format(amount);
   };
 
-  useEffect(() => {
-    if (isEditing) {
-      setEditedData({
-        nama_lengkap: userData.nama_lengkap,
-        email: userData.email,
-        tempat_lahir: userData.tempat_lahir,
-        tanggal_lahir: userData.tanggal_lahir,
-        jenis_kelamin: userData.jenis_kelamin,
-        alamat: userData.alamat,
-      });
-    }
-  }, [isEditing, userData]);
-
-  if (!userData || !user) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <div className="p-8 bg-white rounded-lg shadow-md text-center">
-          <h2 className="text-2xl font-bold text-red-600 mb-4">Error: Pengguna tidak ditemukan atau belum login!</h2>
-          <p className="text-gray-700">Mohon pastikan Anda sudah login.</p>
-        </div>
-      </div>
-    );
-  }
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setEditedData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSave = () => {
-    setUserData(prev => ({ ...prev, ...editedData }));
-    setIsEditing(false);
-    alert("Perubahan berhasil disimpan!");
-  };
-
-  const handleCancel = () => {
-    setIsEditing(false);
-  };
-
   const formatTanggal = (tanggal) => {
     if (!tanggal) return '-';
-    const parts = tanggal.split('-');
-    if (parts.length !== 3 || parts.some(part => isNaN(parseInt(part)))) {
-      return 'Tanggal tidak valid';
+    // Periksa apakah format ISO string (dari Supabase)
+    if (typeof tanggal === 'string' && tanggal.includes('T') && tanggal.includes('Z')) {
+      const date = new Date(tanggal);
+      return date.toLocaleDateString('id-ID', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
     }
-    const day = parseInt(parts[0], 10);
-    const month = parseInt(parts[1], 10);
-    const year = parseInt(parts[2], 10);
-    const date = new Date(year, month - 1, day);
-
-    if (isNaN(date.getTime()) || date.getFullYear() !== year || (date.getMonth() + 1) !== month || date.getDate() !== day) {
-      return 'Tanggal tidak valid';
+    // Jika format 'YYYY-MM-DD' dari input type="date", parse manual atau biarkan Date() menanganinya
+    if (typeof tanggal === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(tanggal)) {
+      const date = new Date(tanggal + 'T00:00:00Z'); // Tambahkan waktu agar tidak masalah zona waktu
+      if (!isNaN(date.getTime())) {
+        return date.toLocaleDateString('id-ID', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+      }
     }
-    return date.toLocaleDateString('id-ID', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    return 'Tanggal tidak valid';
   };
+
 
   const formatWaktuNotifikasi = (isoString) => {
     const date = new Date(isoString);
@@ -282,18 +375,76 @@ export default function Profile2() {
     }
   };
 
-  const handleMarkAsRead = (notificationId) => {
-    setUserNotifications(prevNotifications => {
-      const updatedNotifications = prevNotifications.map(notif =>
-        notif.id === notificationId ? { ...notif, status: "sudah_dibaca" } : notif
-      );
-      // Simpan perubahan status ke sessionStorage
-      if (user) {
-        sessionStorage.setItem(`userNotifications_${user.id}`, JSON.stringify(updatedNotifications));
+  const handleMarkAsRead = async (notificationId) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { error: updateError } = await supabase
+        .from('notifikasi')
+        .update({ status: 'sudah_dibaca' })
+        .eq('id', notificationId);
+
+      if (updateError) {
+        throw updateError;
       }
-      return updatedNotifications;
-    });
+
+      // Update state lokal
+      setUserNotifications(prevNotifications => {
+        const updatedNotifications = prevNotifications.map(notif =>
+          notif.id === notificationId ? { ...notif, status: "sudah_dibaca" } : notif
+        );
+        // Simpan notifikasi yang diperbarui ke sessionStorage (optional, tapi baik untuk konsistensi)
+        if (loggedUserSession) {
+          sessionStorage.setItem(`userNotifications_${loggedUserSession.id}`, JSON.stringify(updatedNotifications));
+        }
+        return updatedNotifications;
+      });
+    } catch (err) {
+      console.error("Gagal menandai notifikasi sebagai dibaca:", err.message);
+      setError("Gagal menandai notifikasi: " + err.message);
+      alert("Gagal menandai notifikasi: " + err.message);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  if (loading && !userData) { // Tampilkan loading penuh jika data awal belum ada
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="p-8 bg-white rounded-lg shadow-md text-center">
+          <p className="text-gray-700">Memuat data profil...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="p-8 bg-white rounded-lg shadow-md text-center">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Error: {error}</h2>
+          <p className="text-gray-700">Mohon coba kembali nanti atau hubungi dukungan.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!userData) { // Jika tidak ada data pengguna setelah loading selesai (misalnya tidak login)
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="p-8 bg-white rounded-lg shadow-md text-center">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Pengguna tidak ditemukan atau belum login!</h2>
+          <p className="text-gray-700">Mohon pastikan Anda sudah login.</p>
+          <button
+            onClick={() => navigate("/login")}
+            className="mt-4 px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+          >
+            Login Sekarang
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 flex flex-col lg:flex-row gap-6 bg-gray-50 min-h-screen">
@@ -317,13 +468,15 @@ export default function Profile2() {
                 <button
                   onClick={handleSave}
                   className={`flex items-center px-4 py-2 bg-[${secondaryColor}] text-white rounded-lg shadow hover:bg-[${darkGreen}] transition`}
+                  disabled={loading}
                 >
                   <Save size={18} className="mr-2" />
-                  Simpan
+                  {loading ? 'Menyimpan...' : 'Simpan'}
                 </button>
                 <button
                   onClick={handleCancel}
                   className="flex items-center px-4 py-2 bg-gray-500 text-white rounded-lg shadow hover:bg-gray-600 transition"
+                  disabled={loading}
                 >
                   <X size={18} className="mr-2" />
                   Batal
@@ -335,7 +488,7 @@ export default function Profile2() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <ProfileFieldFixed
               label="NIK"
-              value={userData.NIK}
+              value={userData.nik || '-'}
               icon={<Hash size={20} />}
               fieldColor={primaryColor}
             />
@@ -359,24 +512,38 @@ export default function Profile2() {
               isEditing={isEditing}
               onChange={handleChange}
               fieldColor={primaryColor}
+              // Email biasanya tidak bisa diedit jika dikelola oleh Supabase Auth
+              readOnly={true} // Atur readOnly agar tidak bisa diedit
             />
 
-            <ProfileFieldFixed
+            <ProfileField
               label="Tempat Lahir"
-              value={userData.tempat_lahir}
+              name="tempat_lahir"
+              value={isEditing ? editedData.tempat_lahir : userData.tempat_lahir}
               icon={<MapPin size={20} />}
+              isEditing={isEditing}
+              onChange={handleChange}
               fieldColor={primaryColor}
             />
-            <ProfileFieldFixed
+            <ProfileField
               label="Tanggal Lahir"
-              value={formatTanggal(userData.tanggal_lahir)}
+              name="tanggal_lahir"
+              type="date" // Menggunakan type="date" untuk input tanggal
+              value={isEditing ? editedData.tanggal_lahir : (userData.tanggal_lahir ? new Date(userData.tanggal_lahir).toISOString().split('T')[0] : '')}
               icon={<Calendar size={20} />}
+              isEditing={isEditing}
+              onChange={handleChange}
               fieldColor={primaryColor}
             />
-            <ProfileFieldFixed
+            <ProfileField
               label="Jenis Kelamin"
-              value={userData.jenis_kelamin}
+              name="jenis_kelamin"
+              value={isEditing ? editedData.jenis_kelamin : userData.jenis_kelamin}
               icon={<User size={20} />}
+              isEditing={isEditing}
+              onChange={handleChange}
+              type="select"
+              options={['Laki-laki', 'Perempuan', 'Lain-lain']} // Tambahkan opsi untuk select
               fieldColor={primaryColor}
             />
             <ProfileField
@@ -390,18 +557,21 @@ export default function Profile2() {
               fieldColor={primaryColor}
               className="col-span-1 md:col-span-2 lg:col-span-3"
             />
-            <ProfileFieldFixed
+            <ProfileField
               label="Nomor HP"
-              value={userData.nomor_hp}
+              name="nomor_hp"
+              value={isEditing ? editedData.nomor_hp : userData.nomor_hp}
               icon={<Phone size={20} />}
+              isEditing={isEditing}
+              onChange={handleChange}
               fieldColor={primaryColor}
             />
 
             <div className="md:col-span-2 lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
               <ProfileFieldFixed
                 label="Status Membership"
-                value={statusMembership}
-                icon={getMembershipIcon()}
+                value={currentMembershipStatus} // Menggunakan state untuk status
+                icon={getMembershipIcon(currentMembershipStatus)}
                 className="col-span-1"
                 fieldColor={primaryColor}
               />
@@ -448,6 +618,7 @@ export default function Profile2() {
                 onChange={(e) => setPoinToRedeem(e.target.value === '' ? '' : parseInt(e.target.value))}
                 className={`p-3 border border-gray-300 rounded-md w-full sm:w-40 focus:outline-none focus:ring-2 focus:ring-[${secondaryColor}] transition-all`}
                 placeholder="Jumlah poin (min 10)"
+                disabled={loading}
               />
               <button
                 onClick={handleRedeemPoin}
@@ -455,11 +626,12 @@ export default function Profile2() {
                   poinToRedeem < 10 ||
                   poinToRedeem > totalPoin ||
                   isNaN(poinToRedeem) ||
-                  poinToRedeem === ''
+                  poinToRedeem === '' ||
+                  loading
                 }
                 className={`px-6 py-3 bg-gradient-to-r from-[${secondaryColor}] to-[${darkGreen}] text-white rounded-md font-semibold hover:from-[${darkGreen}] hover:to-[${secondaryColor}] transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed w-full sm:w-auto cursor-pointer`}
               >
-                Tukarkan Poin
+                {loading ? 'Menukar...' : 'Tukarkan Poin'}
               </button>
             </div>
 
@@ -523,6 +695,7 @@ export default function Profile2() {
                     onClick={() => handleMarkAsRead(notif.id)}
                     className={`ml-3 px-3 py-1 text-xs bg-[${primaryColor}] text-white rounded-md hover:bg-[${darkRed}] transition-colors flex-shrink-0`}
                     title="Tandai sudah dibaca"
+                    disabled={loading}
                   >
                     Tandai Baca
                   </button>
@@ -536,44 +709,23 @@ export default function Profile2() {
   );
 }
 
-// Fungsi getStatusMembership (tetap sama, dengan catatan masalah parsing tanggal yang mungkin muncul)
-function getStatusMembership(userId, tanggalBergabung) {
-  const transaksiUser = TransaksiDummy.filter(trx => trx.userId === userId);
-  const now = new Date();
-
-  if (!tanggalBergabung) return "Baru";
-
-  const joinedAt = new Date(tanggalBergabung);
-  const selisihHari = Math.floor((now - joinedAt) / (1000 * 60 * 60 * 24));
-  if (selisihHari < 7 && transaksiUser.length === 0) return "Baru";
-
-  const transaksi7Hari = transaksiUser.filter(trx => (now - new Date(trx.tanggalPembelian)) / (1000 * 60 * 60 * 24) <= 7);
-  if (transaksi7Hari.length >= 5) return "Loyal";
-  if (transaksi7Hari.length >= 2) return "Aktif";
-
-  const transaksi30Hari = transaksiUser.filter(trx => (now - new Date(trx.tanggalPembelian)) / (1000 * 60 * 60 * 24) <= 30);
-  if (transaksi30Hari.length === 0) return "Pasif";
-
-  return "Aktif";
-}
-
 // Komponen ProfileField
-const ProfileField = ({ label, name, value, icon, isEditing, onChange, type = "text", options, fieldColor, className }) => (
+const ProfileField = ({ label, name, value, icon, isEditing, onChange, type = "text", options, fieldColor, className, readOnly = false }) => (
   <div className={`p-3 bg-white rounded-lg shadow-sm border border-gray-200 min-h-[90px] flex flex-col justify-between ${className || ''}`}>
     <p className="text-sm font-medium text-gray-500 flex items-center space-x-2 mb-1">
       {React.cloneElement(icon, { color: fieldColor })} <span>{label}</span>
     </p>
     {isEditing ? (
       type === "textarea" ? (
-        <textarea name={name} value={value} onChange={onChange} className={`w-full mt-1 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[${fieldColor}] focus:border-transparent outline-none text-base text-gray-800 box-border resize-y min-h-[40px]` } rows="3"></textarea>
+        <textarea name={name} value={value} onChange={onChange} readOnly={readOnly} className={`w-full mt-1 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[${fieldColor}] focus:border-transparent outline-none text-base text-gray-800 box-border resize-y min-h-[40px] ${readOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`} rows="3"></textarea>
       ) : type === "select" ? (
-        <select name={name} value={value} onChange={onChange} className={`w-full mt-1 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[${fieldColor}] focus:border-transparent outline-none text-base text-gray-800 bg-white box-border`}>
+        <select name={name} value={value} onChange={onChange} readOnly={readOnly} className={`w-full mt-1 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[${fieldColor}] focus:border-transparent outline-none text-base text-gray-800 bg-white box-border ${readOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`}>
           {options.map(option => (
             <option key={option} value={option}>{option}</option>
           ))}
         </select>
       ) : (
-        <input type={type} name={name} value={value} onChange={onChange} className={`w-full mt-1 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[${fieldColor}] focus:border-transparent outline-none text-base text-gray-800 box-border`} />
+        <input type={type} name={name} value={value} onChange={onChange} readOnly={readOnly} className={`w-full mt-1 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[${fieldColor}] focus:border-transparent outline-none text-base text-gray-800 box-border ${readOnly ? 'bg-gray-100 cursor-not-allowed' : ''}`} />
       )
     ) : (
       <p className="text-base font-semibold text-gray-800 min-h-[32px] flex items-center flex-grow break-words">{value || '-'}</p>

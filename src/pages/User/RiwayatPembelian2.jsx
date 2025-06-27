@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
-import { TransaksiDummy } from "../../data/TransaksiDummy";
-import { ProductDummy } from "../../data/ProductDummy";
+import { useEffect, useState, useCallback, useMemo } from "react";
+import { supabase } from '../../supabase'; // Sesuaikan path ini jika supabase.js ada di tempat lain
 import { History, ChevronLeft, ChevronRight } from 'lucide-react';
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
@@ -8,28 +7,111 @@ import html2canvas from "html2canvas";
 export default function RiwayatPembelianUserPribadi() {
   const [userTransaksi, setUserTransaksi] = useState([]);
   const [loggedUser, setLoggedUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
   const itemsPerPage = 2; // Meningkatkan jumlah item per halaman
+
+  // Fungsi utilitas untuk memvalidasi format UUID
+  const isValidUUID = (uuid) => {
+    // Regex dasar untuk memvalidasi format UUID v4
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    return typeof uuid === 'string' && uuidRegex.test(uuid);
+  };
+
+  // Fetch product name from Supabase by ID
+  const getProductName = useCallback(async (productId) => {
+    const { data, error } = await supabase
+      .from('produk') // Menggunakan nama tabel 'produk'
+      .select('nama') // Mengambil kolom 'nama'
+      .eq('id', productId)
+      .single();
+
+    if (error) {
+      console.error("Error fetching product name:", error.message);
+      return "Produk Tidak Ditemukan";
+    }
+    return data ? data.nama : "Produk Tidak Ditemukan"; // Menggunakan data.nama
+  }, []);
+
+  // Fetch user's transactions from Supabase
+  const fetchUserTransactions = useCallback(async (userId) => {
+    setLoading(true);
+    setError(null);
+
+    // --- Tambahkan Validasi UUID di sini ---
+    if (!isValidUUID(userId)) {
+      setError('ID pengguna tidak dalam format yang benar (UUID). Harap periksa data pengguna.');
+      setLoading(false);
+      console.error('Invalid User ID format:', userId);
+      return; // Hentikan eksekusi jika ID tidak valid
+    }
+    // --- Akhir Validasi UUID ---
+
+    try {
+      // Fetch transactions for the specific user, joining with detail_transaksi
+      // and then to produk for product name and price at time of transaction
+      const { data, error } = await supabase
+        .from('transaksi')
+        .select(`
+          id,
+          id_pengguna,
+          tanggal_pembelian,
+          detail_transaksi (
+            id_produk,
+            kuantitas,
+            harga_saat_pembelian,
+            catatan
+          )
+        `) // Komentar telah dihapus dari sini
+        .eq('id_pengguna', userId)
+        .order('tanggal_pembelian', { ascending: false }); // Urutkan berdasarkan tanggal terbaru
+
+      if (error) {
+        throw error;
+      }
+
+      // Reformat data to match existing component expectations
+      const formattedTransactions = await Promise.all(data.map(async (tx) => {
+        const itemsWithNames = await Promise.all(tx.detail_transaksi.map(async (dt) => {
+          const productName = await getProductName(dt.id_produk);
+          return {
+            productId: dt.id_produk,
+            productName: productName, // Menambahkan nama produk yang diambil
+            quantity: dt.kuantitas,
+            price: dt.harga_saat_pembelian, // Ambil harga saat pembelian dari detail_transaksi
+            notes: dt.catatan // Ambil catatan jika ada
+          };
+        }));
+        return {
+          id: tx.id,
+          userId: tx.id_pengguna,
+          tanggalPembelian: tx.tanggal_pembelian,
+          items: itemsWithNames
+        };
+      }));
+
+      setUserTransaksi(formattedTransactions);
+      setPage(1); // Reset ke halaman 1 saat load data baru
+    } catch (err) {
+      setError("Gagal memuat riwayat pembelian: " + err.message);
+      console.error("Error fetching user transactions:", err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [getProductName]); // Tambahkan getProductName ke dependencies
 
   useEffect(() => {
     const user = JSON.parse(sessionStorage.getItem("loggedUser"));
     if (user && user.role === "user") {
       setLoggedUser(user);
-
-      // Filter dan sort transaksi user berdasarkan tanggal terbaru
-      const transaksiUser = TransaksiDummy
-        .filter((trx) => trx.userId === user.id)
-        .sort((a, b) => new Date(b.tanggalPembelian) - new Date(a.tanggalPembelian));
-
-      setUserTransaksi(transaksiUser);
-      setPage(1); // reset ke halaman 1 saat load data
+      fetchUserTransactions(user.id);
+    } else {
+      setLoading(false); // Jika tidak login, set loading ke false
+      // Anda bisa menambahkan pesan atau redirect jika user tidak login
     }
-  }, []);
+  }, [fetchUserTransactions]);
 
-  const getProductName = (productId) => {
-    const product = ProductDummy.find((p) => p.id === productId);
-    return product ? product.name : "Produk Tidak Ditemukan";
-  };
 
   const formatRupiah = (amount) => {
     return new Intl.NumberFormat('id-ID', {
@@ -48,21 +130,20 @@ export default function RiwayatPembelianUserPribadi() {
       return;
     }
 
-    // Buat elemen invoice terlihat (tetapi di luar layar) sebelum mengonversinya
     invoiceElement.style.position = 'absolute';
-    invoiceElement.style.left = '-9999px'; // Pindahkan ke luar layar
-    invoiceElement.style.display = 'block'; // Pastikan terlihat
+    invoiceElement.style.left = '-9999px';
+    invoiceElement.style.display = 'block';
 
     try {
       const canvas = await html2canvas(invoiceElement, {
-        scale: 2, // Meningkatkan resolusi untuk kualitas PDF yang lebih baik
-        useCORS: true // Penting jika ada gambar dari URL eksternal
+        scale: 2,
+        useCORS: true
       });
-      const pdf = new jsPDF('p', 'mm', 'a4'); // Gunakan 'mm' untuk satuan
+      const pdf = new jsPDF('p', 'mm', 'a4');
       const imgData = canvas.toDataURL("image/png");
       
-      const imgWidth = 210; // Lebar A4 dalam mm
-      const pageHeight = 297; // Tinggi A4 dalam mm
+      const imgWidth = 210;
+      const pageHeight = 297;
       const imgHeight = canvas.height * imgWidth / canvas.width;
       let heightLeft = imgHeight;
 
@@ -82,7 +163,6 @@ export default function RiwayatPembelianUserPribadi() {
     } catch (error) {
       console.error("Gagal membuat PDF:", error);
     } finally {
-      // Sembunyikan kembali elemen invoice setelah selesai
       invoiceElement.style.position = '';
       invoiceElement.style.left = '';
       invoiceElement.style.display = 'none';
@@ -101,14 +181,30 @@ export default function RiwayatPembelianUserPribadi() {
   };
 
   // Pagination: hitung total halaman dan data yang ditampilkan di halaman sekarang
-  const totalPages = Math.ceil(userTransaksi.length / itemsPerPage);
+  const totalPages = useMemo(() => Math.ceil(userTransaksi.length / itemsPerPage), [userTransaksi.length, itemsPerPage]);
   const startIndex = (page - 1) * itemsPerPage;
-  const currentTransactions = userTransaksi.slice(startIndex, startIndex + itemsPerPage);
+  const currentTransactions = useMemo(() => userTransaksi.slice(startIndex, startIndex + itemsPerPage), [userTransaksi, startIndex, itemsPerPage]);
+
+  if (loading) {
+    return (
+      <div className="p-6 bg-white rounded-lg shadow-md border border-gray-200 max-w-4xl mx-auto text-center">
+        <p className="text-gray-600">Memuat riwayat pembelian...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 bg-white rounded-lg shadow-md border border-red-200 max-w-4xl mx-auto text-center">
+        <p className="text-red-600 font-medium">Error: {error}</p>
+      </div>
+    );
+  }
 
   if (!loggedUser) {
     return (
       <div className="p-6 bg-white rounded-lg shadow-md border border-gray-200 max-w-4xl mx-auto">
-        <p className="text-[#E81F25] font-medium">Harap login sebagai user.</p>
+        <p className="text-[#E81F25] font-medium">Harap login sebagai user untuk melihat riwayat pembelian.</p>
       </div>
     );
   }
@@ -166,7 +262,9 @@ export default function RiwayatPembelianUserPribadi() {
                         {trx.items.map((item, idx) => (
                           <tr key={idx}>
                             <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-                              {getProductName(item.productId)}
+                              {/* Menampilkan nama produk yang sudah diambil di fetchUserTransactions */}
+                              {item.productName} 
+                              {item.notes && <p className="text-xs italic text-gray-500">Catatan: {item.notes}</p>}
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                               {item.quantity}
@@ -200,17 +298,15 @@ export default function RiwayatPembelianUserPribadi() {
           </div>
 
           {/* Ini adalah elemen invoice yang disembunyikan untuk keperluan PDF generation */}
-          {/* Ubah 'hidden-print' agar tidak menggunakan display: none secara langsung */}
           {currentTransactions.map((trx) => (
             <div 
               id={`invoice-${trx.id}`} 
               key={`invoice-hidden-${trx.id}`}
-              // Pertahankan gaya ini untuk kebutuhan html2canvas
               style={{ position: 'absolute', left: '-9999px', width: '210mm', minHeight: '297mm', padding: '15mm', boxSizing: 'border-box', backgroundColor: 'white', color: 'black', fontFamily: 'Arial, sans-serif', fontSize: '12px' }} 
             >
               {/* Header Invoice */}
               <div style={{
-                backgroundColor: '#E81F25', // Merah Fresh Mart
+                backgroundColor: '#E81F25',
                 color: 'white',
                 padding: '20px',
                 textAlign: 'center',
@@ -218,7 +314,6 @@ export default function RiwayatPembelianUserPribadi() {
                 marginBottom: '20px',
                 boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
               }}>
-                {/* Anda bisa menambahkan logo di sini, contoh: <img src="/path/to/logo.png" alt="Fresh Mart Logo" style={{ maxWidth: '150px', marginBottom: '10px' }} /> */}
                 <h1 style={{ margin: '0', fontSize: '32px', fontWeight: 'bold', letterSpacing: '1px' }}>FRESH MART</h1>
                 <p style={{ margin: '5px 0 0', fontSize: '16px', fontStyle: 'italic' }}>Shopping at Fresh Mart is the Right Choice❤️🛍️🎊</p>
                 <p style={{ margin: '10px 0 0', fontSize: '13px' }}>Jl. Hangtuah, Suka Mulia, Kec. Sail, Kota Pekanbaru, Riau 28114</p>
@@ -234,8 +329,6 @@ export default function RiwayatPembelianUserPribadi() {
                   <div>
                     <p style={{ margin: '0' }}><strong>No. Transaksi:</strong> <span style={{ color: '#E81F25', fontWeight: 'bold' }}>#{trx.id}</span></p>
                     <p style={{ margin: '0' }}><strong>Tanggal:</strong> {formatDate(trx.tanggalPembelian)}</p>
-                    {/* Opsional: Tampilkan nama pelanggan jika data user tersedia dan ingin ditambahkan */}
-                    {/* <p style={{ margin: '0' }}><strong>Pelanggan:</strong> {getUserName(trx.userId)}</p> */}
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <p style={{ margin: '0' }}>Terima Kasih Atas Kepercayaan Anda!</p>
@@ -255,7 +348,10 @@ export default function RiwayatPembelianUserPribadi() {
                   <tbody>
                     {trx.items.map((item, idx) => (
                       <tr key={idx} style={{ borderBottom: '1px solid #eee' }}>
-                        <td style={{ padding: '10px 12px', border: '1px solid #ddd' }}>{getProductName(item.productId)}</td>
+                        <td style={{ padding: '10px 12px', border: '1px solid #ddd' }}>
+                          {item.productName}
+                          {item.notes && <p style={{ fontSize: '10px', fontStyle: 'italic', color: '#666' }}>Catatan: {item.notes}</p>}
+                        </td>
                         <td style={{ padding: '10px 12px', textAlign: 'center', border: '1px solid #ddd' }}>{item.quantity}</td>
                         <td style={{ padding: '10px 12px', textAlign: 'right', border: '1px solid #ddd' }}>{formatRupiah(item.price)}</td>
                         <td style={{ padding: '10px 12px', textAlign: 'right', border: '1px solid #ddd', fontWeight: 'bold' }}>{formatRupiah(item.price * item.quantity)}</td>
@@ -281,7 +377,6 @@ export default function RiwayatPembelianUserPribadi() {
             </div>
           ))}
 
-
           {/* Pagination Controls */}
           {totalPages > 1 && (
             <div className="flex flex-col sm:flex-row items-center justify-between mt-8 space-y-4 sm:space-y-0">
@@ -302,9 +397,9 @@ export default function RiwayatPembelianUserPribadi() {
                   <ChevronLeft className="w-5 h-5" />
                 </button>
 
-                {[...Array(totalPages)].map((_, idx) => {
-                  const pageNum = idx + 1;
-                  // Tampilkan hanya beberapa nomor halaman di sekitar halaman aktif
+                {/* Page numbers: Simplified for brevity, consider more robust solutions for many pages */}
+                {Array.from({ length: totalPages }, (_, i) => {
+                  const pageNum = i + 1;
                   if (
                     pageNum === 1 ||
                     pageNum === totalPages ||
