@@ -67,8 +67,8 @@ export default function Profile2() {
     if (selisihHari < 7 && transaksiUser.length === 0) return "Baru";
 
     const transaksi7Hari = transaksiUser.filter(trx => (now - new Date(trx.tanggalPembelian)) / (1000 * 60 * 60 * 24) <= 7);
-    if (transaksi7Hari.length >= 5) return "Loyal";
-    if (transaksi7Hari.length >= 2) return "Aktif";
+    if (transaksi7Hari.length >= 28) return "Loyal";
+    if (transaksi7Hari.length >= 14) return "Aktif";
 
     const transaksi30Hari = transaksiUser.filter(trx => (now - new Date(trx.tanggalPembelian)) / (1000 * 60 * 60 * 24) <= 30);
     if (transaksi30Hari.length === 0) return "Pasif";

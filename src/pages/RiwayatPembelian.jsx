@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '../supabase'; // Import Supabase client
 import { utils, writeFile } from 'xlsx';
 import jsPDF from 'jspdf';
@@ -117,9 +117,18 @@ export default function RiwayatPembelian() {
       (now - new Date(trx.tanggal_pembelian)) / (1000 * 60 * 60 * 24) <= 7 // Corrected property
     );
 
-    if (recentTrans.length >= 5) return 'Loyal';
-    if (recentTrans.length >= 2) return 'Aktif';
-    return 'Pasif';
+    // KETETAPAN BARU: Loyal >= 28, Aktif >= 14
+    if (recentTrans.length >= 28) return 'Loyal';
+    if (recentTrans.length >= 14) return 'Aktif';
+    
+    // Check for "Pasif" (no transactions in 30 days)
+    const transaksi30Hari = userTransactionsFiltered.filter(t =>
+      (now - new Date(t.tanggal_pembelian)) / (1000 * 60 * 60 * 24) <= 30
+    );
+    if (transaksi30Hari.length === 0) return "Pasif";
+
+    // Default to Aktif if none of the above conditions met but has some transactions within 30 days
+    return 'Aktif'; 
   }, [transactions, getUserById]);
 
 

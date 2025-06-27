@@ -20,6 +20,7 @@ import logoFreshMart from '../assets/images/logo_freshmart.png'; // Import the i
 const menuItems = [
   { name: 'Dashboard', icon: <LayoutDashboard />, path: '/' },
   { name: 'Produk', icon: <Box />, path: '/produk' },
+  { name: 'Daftar Membership', icon: <User />, path: '/listpengguna' },
   { name: 'Umpan Balik', icon: <Users />, path: '/umpanbalik' },
   { name: 'FAQ', icon: <Info />, path: '/faq' },
   { name: 'Riwayat Pembelian', icon: <BarChart2 />, path: '/riwayatpembelian' },

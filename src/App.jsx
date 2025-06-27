@@ -19,9 +19,10 @@ import Register from './pages/Register';
 import Forgot from './pages/Forgot';
 import RiwayatPembelian from './pages/RiwayatPembelian';
 import ListUser from './pages/ListUser';
-import ResetPasswordConfirm from './pages/ResetPasswordConfirm'; // <--- IMPORT KOMPONEN BARU INI
+import ResetPasswordConfirm from './pages/ResetPasswordConfirm';
 import SendNotification from './pages/SendNotification';
 import SchedulePromotion from './pages/SchedulePromotion';
+import DaftarMembership from './pages/DaftarMembership';
 
 export default function App() {
   return (
@@ -30,13 +31,11 @@ export default function App() {
       <Route path="/register" element={<Register />} />
       <Route path="/forgot" element={<Forgot />} />
       <Route path="/logout" element={<Logout />} />
-      {/* RUTE BARU UNTUK KONFIRMASI RESET PASSWORD */}
-      <Route path="/reset-password-confirm" element={<ResetPasswordConfirm />} /> {/* <--- TAMBAHKAN ROUTE INI */}
+      <Route path="/reset-password-confirm" element={<ResetPasswordConfirm />} />
 
-      {/* Semua route yang lain dibungkus ProtectedRoute */}
       <Route
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["admin"]}>
             <MainLayout />
           </ProtectedRoute>
         }
@@ -50,10 +49,12 @@ export default function App() {
         <Route path="/notifikasi" element={<SendNotification />} />
         <Route path="/jadwalpromo" element={<SchedulePromotion />} />
         <Route path="/listuser" element={<ListUser />} />
+        <Route path="/listpengguna" element={<DaftarMembership />} />
       </Route>
+
       <Route
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["user"]}>
             <UserLayout />
           </ProtectedRoute>
         }

@@ -200,11 +200,11 @@ export default function ProductUser() {
       const transaksi7Hari = userTransactions.filter(t =>
         (now - new Date(t.tanggalPembelian)) / (1000 * 60 * 60 * 24) <= 7
       );
-      if (transaksi7Hari.length >= 5) {
+      if (transaksi7Hari.length >= 28) {
         console.log("Status: Loyal");
         setStatusMembership('loyal');
-      } else if (transaksi7Hari.length >= 2) {
-        console.log("Status: Aktif (2+ transactions in 7 days)");
+      } else if (transaksi7Hari.length >= 14) {
+        console.log("Status: Aktif (14+ transactions in 7 days)");
         setStatusMembership('aktif');
       } else {
         const transaksi30Hari = userTransactions.filter(t =>
