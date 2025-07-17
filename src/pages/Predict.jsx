@@ -48,7 +48,7 @@ export default function MembershipPredictionForm() {
 
   useEffect(() => {
     // Pastikan ini adalah BASE URL Ngrok Anda, TANPA ENDPOINT /predict_membership
-    const fixedNgrokBaseUrl = "https://303438a2ec97.ngrok-free.app";
+    const fixedNgrokBaseUrl = "https://840086bd663e.ngrok-free.app";
     setNgrokBaseUrl(fixedNgrokBaseUrl);
   }, []);
 
@@ -58,14 +58,14 @@ export default function MembershipPredictionForm() {
 
   const handleUseSample = () => {
     setForm({
-      Nama_User: "Agus Salim",
-      Tanggal: "2025-01-31",
-      Total_Harga: "1714916",
-      Jumlah_Transaksi_Kumulatif: "7",
-      Total_Belanja_Kumulatif: "9757239",
-      Rata2_Belanja_Kumulatif: "1393891.29",
-      Hari_Sejak_Transaksi_Terakhir_Sebelumnya: "3",
-      Hari_Sejak_Transaksi_Pertama: "22"
+      Nama_User: "Rina Wijaya",
+      Tanggal: "2025-06-27",
+      Total_Harga: "1905181",
+      Jumlah_Transaksi_Kumulatif: "36",
+      Total_Belanja_Kumulatif: "40827621",
+      Rata2_Belanja_Kumulatif: "1134100.58",
+      Hari_Sejak_Transaksi_Terakhir_Sebelumnya: "4",
+      Hari_Sejak_Transaksi_Pertama: "169"
     });
   };
 
@@ -160,6 +160,21 @@ export default function MembershipPredictionForm() {
       y: { beginAtZero: true, max: 100, title: { display: true, text: 'Akurasi (%)' } },
     },
   };
+
+  const getAdminInsight = (label) => {
+    switch (label) {
+      case "Pasif":
+        return "Pelanggan ini sudah jarang bertransaksi. Disarankan mengirim reminder atau promo reaktivasi.";
+      case "Baru":
+        return "Pelanggan baru yang masih dalam tahap eksplorasi. Berikan edukasi dan penawaran selamat datang.";
+      case "Aktif":
+        return "Pelanggan ini rutin bertransaksi. Arahkan ke program loyalitas untuk meningkatkan retensi.";
+      case "Loyal":
+        return "Pelanggan sangat loyal. Berikan reward eksklusif atau keistimewaan sebagai bentuk apresiasi.";
+      default:
+        return "Belum ada insight tersedia.";
+      }
+    };
 
   return (
     <div className="max-w-4xl mx-auto p-6 font-sans">
@@ -308,7 +323,10 @@ export default function MembershipPredictionForm() {
                       </div>
                     </div>
                   </div>
-                  
+                  <div className="mt-4 p-4 bg-blue-50 border-l-4 border-blue-400 rounded">
+                      <p className="font-semibold text-blue-800">💡 Rekomendasi untuk Admin:</p>
+                      <p className="text-sm text-gray-700">{getAdminInsight(result.predicted_label)}</p>
+                  </div>
                   <div className="h-64">
                     <Bar data={predictionChartData} options={chartOptions} />
                   </div>
