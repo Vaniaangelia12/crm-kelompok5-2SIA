@@ -48,7 +48,7 @@ export default function MembershipPredictionForm() {
 
   useEffect(() => {
     // Pastikan ini adalah BASE URL Ngrok Anda, TANPA ENDPOINT /predict_membership
-    const fixedNgrokBaseUrl = "https://840086bd663e.ngrok-free.app";
+    const fixedNgrokBaseUrl = "https://7fe45abb89ba.ngrok-free.app/";
     setNgrokBaseUrl(fixedNgrokBaseUrl);
   }, []);
 
