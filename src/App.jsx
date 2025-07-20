@@ -23,6 +23,7 @@ import ResetPasswordConfirm from './pages/ResetPasswordConfirm';
 import SendNotification from './pages/SendNotification';
 import SchedulePromotion from './pages/SchedulePromotion';
 import DaftarMembership from './pages/DaftarMembership';
+import PromoHunterForm from './pages/Predict';
 
 export default function App() {
   return (
@@ -50,6 +51,7 @@ export default function App() {
         <Route path="/jadwalpromo" element={<SchedulePromotion />} />
         <Route path="/listuser" element={<ListUser />} />
         <Route path="/listpengguna" element={<DaftarMembership />} />
+        <Route path="/predict_membership" element={<PromoHunterForm />} />
       </Route>
 
       <Route

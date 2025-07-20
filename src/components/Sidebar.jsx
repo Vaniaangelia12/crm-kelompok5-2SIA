@@ -15,6 +15,7 @@ import {
   UsersIcon,
   Mail,
   PercentSquare,
+  Eye,
 } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import logoFreshMart from '../assets/images/logo_freshmart.png'; // Import the image
@@ -26,9 +27,10 @@ const menuItems = [
   { name: 'Umpan Balik', icon: <Users />, path: '/umpanbalik' },
   { name: 'FAQ', icon: <Info />, path: '/faq' },
   { name: 'Riwayat Pembelian', icon: <BarChart2 />, path: '/riwayatpembelian' },
-  // { name: 'Kirim Notifikasi', icon: <Mail />, path: '/notifikasi' },
+  { name: 'Kirim Notifikasi', icon: <Mail />, path: '/notifikasi' },
   { name: 'Jadwalkan Promo', icon: <PercentSquare />, path: '/jadwalpromo' },
   // { name: 'List User', icon: <UsersIcon />, path: '/listuser' },
+  { name: 'Prediksi', icon: <Eye />, path: '/predict_membership' },
 ]
 
 const accountItems = [
